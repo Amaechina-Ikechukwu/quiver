@@ -59,6 +59,14 @@ function BrainstormArena() {
       Name: "Ki kayne",
       role: "Speaker",
     },
+    {
+      Name: "Kim kayne",
+      role: "Speaker",
+    },
+    {
+      Name: "Kie kayne",
+      role: "Speaker",
+    },
   ];
   let role = [];
   let user = [];
@@ -119,10 +127,86 @@ function BrainstormArena() {
     ArrangeUsers();
     cam();
   }, []);
+  console.log(ArrangeUsers);
 
   if (users === []) {
     <Spinner size="sm" />;
   }
+
+  const Calls = ({ item }) => {
+    return (
+      <Box
+        width={users.length > 3 ? "48%" : "97%"}
+        height={users.length > 3 ? "200" : "300"}
+        bg="brand.200"
+        m={0.5}
+        borderWidth={0.2}
+        rounded="sm"
+        borderColor={"brand.800"}
+        flexDirection="column"
+        alignItems={"center"}
+        justifyContent={"center"}
+        shadow={"lg"}
+      >
+        <Box w="100%" h="80%" alignItems={"center"} justifyContent="center">
+          {item.role === "User" && (
+            <View
+              style={{
+                width: "95%",
+                height: "95%",
+                borderRadius: 10,
+                aspectRatio: 1 / 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {showCam === false ? (
+                <Text color={"brand.300"} fontSize="3xl">
+                  {item.Name}
+                </Text>
+              ) : (
+                <Camera
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 10,
+                    aspectRatio: 1 / 1,
+                  }}
+                  type={ctype}
+                ></Camera>
+              )}
+            </View>
+          )}
+        </Box>
+        <Box
+          flexDirection={"column"}
+          alignItems={"center"}
+          justifyContent="flex-end"
+        >
+          <Box
+            w="100%"
+            flexDirection={"row"}
+            alignItems={"center"}
+            justifyContent={"space-between"}
+          >
+            <Box
+              flexDirection={"column"}
+              alignItems={"center"}
+              justifyContent={"space-between"}
+            >
+              <Text color="brand.800" fontSize="lg">
+                {item.Name}
+              </Text>
+              <Text color="brand.800" opacity={0.4} fontSize="sm">
+                {item.role}
+              </Text>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
 
   return (
     <Box flex={1} w="full" h="100%" {...safeAreaProps}>
@@ -159,94 +243,48 @@ function BrainstormArena() {
                 justifyContent: "center",
               }}
             >
-              <FlatList
-                style={{ width: `${users.length > 4 ? null : "100%"}` }}
-                data={users}
-                numColumns={users.length > 4 ? 2 : 1}
-                scrollEnabled
-                renderItem={({ item }) => (
-                  <Box
-                    w={users.length > 4 ? "48%" : "97%"}
-                    h={users.length > 4 ? "200" : "300"}
-                    bg="brand.200"
-                    m={0.5}
-                    borderWidth={0.2}
-                    rounded="sm"
-                    borderColor={"brand.800"}
-                    flexDirection="column"
-                    alignItems={"center"}
-                    justifyContent={
-                      users.length > 4 ? "space-between" : "center"
-                    }
-                    shadow={"lg"}
-                  >
-                    <Box
-                      w="100%"
-                      h="80%"
-                      alignItems={"center"}
-                      justifyContent="center"
-                    >
-                      {item.role === "User" && (
-                        <View
-                          style={{
-                            width: "95%",
-                            height: "95%",
-                            borderRadius: 10,
-                            aspectRatio: 1 / 1,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {showCam === false ? (
-                            <Text color={"brand.300"} fontSize="3xl">
-                              {item.Name}
-                            </Text>
-                          ) : (
-                            <Camera
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: 10,
-                                aspectRatio: 1 / 1,
-                              }}
-                              type={ctype}
-                            ></Camera>
-                          )}
-                        </View>
-                      )}
-                    </Box>
-                    <Box
-                      flexDirection={"column"}
-                      alignItems={"center"}
-                      justifyContent="flex-end"
-                    >
-                      <Box
-                        w="100%"
-                        flexDirection={"row"}
-                        alignItems={"center"}
-                        justifyContent={"space-between"}
-                      >
-                        <Box
-                          flexDirection={"column"}
-                          alignItems={"center"}
-                          justifyContent={"space-between"}
-                        >
-                          <Text color="brand.800" fontSize="lg">
-                            {item.Name}
-                          </Text>
-                          <Text color="brand.800" opacity={0.4} fontSize="sm">
-                            {item.role}
-                          </Text>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Box>
-                )}
-                keyExtractor={(item) =>
-                  item.Name + Math.floor(Math.random() * 100 + 2)
-                }
-              />
+              {users.length < 3 ? (
+                <FlatList
+                  style={{ width: `100%` }}
+                  data={users}
+                  scrollEnabled
+                  renderItem={Calls}
+                  keyExtractor={(item, index) =>
+                    users.length > 2
+                      ? item.Name +
+                        Math.floor(
+                          Math.random() * 100 +
+                            users.length * Math.floor(Math.random() * 100)
+                        )
+                      : Math.floor(Math.random() * 10 + users.length * index) +
+                        "#"
+                  }
+                  key={(item, index) =>
+                    users.length > 3
+                      ? item.Name +
+                        Math.floor(Math.random() * 100 + users.length * index)
+                      : Math.floor(Math.random() * 100 + users.length * index) +
+                        "#"
+                  }
+                />
+              ) : (
+                <FlatList
+                  numColumns={2}
+                  data={users}
+                  scrollEnabled
+                  renderItem={Calls}
+                  keyExtractor={(item, index) =>
+                    item.Name +
+                    Math.floor(
+                      Math.random() * 100 +
+                        users.length * Math.floor(Math.random() * 100)
+                    )
+                  }
+                  key={(item, index) =>
+                    Math.floor(Math.random() * 100 + users.length * index) + "#"
+                  }
+                />
+              )}
             </Box>
           </Pressable>
           {/* /////////////////////footer/////////////////////// */}
