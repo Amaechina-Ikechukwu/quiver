@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import CallPage from "./screens/Frontpage";
 import Personal from "./callScreens/Personal";
 import BrainstormArena from "./callScreens/Brainstrom";
+import useSplash from "./store/Splash";
 
 const newColorTheme = {
   brand: {
@@ -65,28 +66,48 @@ export default function App() {
     "Raleway-Regular": require("./assets/fonts/static/Raleway-Regular.ttf"),
     "AlmendraSC-Regular": require("./assets/fonts/AlmendraSC-Regular.ttf"),
   });
+  const seenSplash = useSplash();
 
-  return (
-    <NativeBaseProvider theme={theme}>
-      <Box
-        w="full"
-        flex={1}
-        bg="brand.100"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <NativeRouter>
-          <Routes>
-            {/* <Route exact path="/" element={<Unboarding />} /> */}
-            <Route exact path="/" element={<Login />} />
-            <Route exact path="/frontpage" element={<CallPage />} />
-            <Route exact path="/personalcall" element={<Personal />} />
-            <Route exact path="/brainstorm" element={<BrainstormArena />} />
-          </Routes>
-        </NativeRouter>
-      </Box>
-    </NativeBaseProvider>
-  );
+  if (seenSplash.seenSplash == false) {
+    return (
+      <NativeBaseProvider theme={theme}>
+        <Box
+          w="full"
+          flex={1}
+          bg="brand.100"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <NativeRouter>
+            <Routes>
+              <Route exact path="/" element={<Unboarding />} />
+            </Routes>
+          </NativeRouter>
+        </Box>
+      </NativeBaseProvider>
+    );
+  } else {
+    return (
+      <NativeBaseProvider theme={theme}>
+        <Box
+          w="full"
+          flex={1}
+          bg="brand.100"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <NativeRouter>
+            <Routes>
+              <Route exact path="/" element={<Login />} />
+              <Route exact path="/frontpage" element={<CallPage />} />
+              <Route exact path="/personalcall" element={<Personal />} />
+              <Route exact path="/brainstorm" element={<BrainstormArena />} />
+            </Routes>
+          </NativeRouter>
+        </Box>
+      </NativeBaseProvider>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

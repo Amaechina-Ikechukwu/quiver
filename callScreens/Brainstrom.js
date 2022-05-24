@@ -243,10 +243,10 @@ function BrainstormArena() {
                 justifyContent: "center",
               }}
             >
-              {users.length > 3 ? (
+              {users.length < 3 ? (
                 <FlatList
+                  style={{ width: `100%` }}
                   data={users}
-                  numColumns={2}
                   scrollEnabled
                   renderItem={Calls}
                   keyExtractor={(item, index) =>
@@ -256,7 +256,7 @@ function BrainstormArena() {
                           Math.random() * 100 +
                             users.length * Math.floor(Math.random() * 100)
                         )
-                      : Math.floor(Math.random() * 100 + users.length * index) +
+                      : Math.floor(Math.random() * 10 + users.length * index) +
                         "#"
                   }
                   key={(item, index) =>
@@ -269,7 +269,7 @@ function BrainstormArena() {
                 />
               ) : (
                 <FlatList
-                  style={{ width: `100%` }}
+                  numColumns={2}
                   data={users}
                   scrollEnabled
                   renderItem={Calls}

@@ -16,6 +16,7 @@ import { Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Link, useNavigate } from "react-router-native";
+import useSplash from "../store/Splash";
 
 const MoveOut = () => {
   // Will change fadeAnim value to 0 in 3 seconds
@@ -33,7 +34,7 @@ function Unboarding() {
   const [index, setIndex] = useState(1);
   const ballAnimatedValue = useRef(new Animated.Value(0)).current;
   let navigate = useNavigate();
-
+  const seenSplash = useSplash();
   const xVal = ballAnimatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 40],
@@ -184,7 +185,7 @@ function Unboarding() {
       MoveIn();
     }, 800);
     setTimeout(() => {
-      navigate("/login");
+      seenSplash.hasSeenSplash();
     }, 2000);
   };
 
