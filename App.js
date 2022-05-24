@@ -77,8 +77,8 @@ export default function App() {
       >
         <NativeRouter>
           <Routes>
-            <Route exact path="/" element={<Unboarding />} />
-            <Route exact path="/login" element={<Login />} />
+            {/* <Route exact path="/" element={<Unboarding />} /> */}
+            <Route exact path="/" element={<Login />} />
             <Route exact path="/frontpage" element={<CallPage />} />
             <Route exact path="/personalcall" element={<Personal />} />
             <Route exact path="/brainstorm" element={<BrainstormArena />} />
