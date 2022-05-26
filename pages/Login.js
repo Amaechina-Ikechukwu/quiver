@@ -5,8 +5,21 @@ import Header from "../constants/Header";
 import colors from "../colors";
 import { StyleSheet, Text, Image, Animated, View } from "react-native";
 import { Link, useNavigate } from "react-router-native";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  signInWithCredential,
+} from "firebase/auth";
+import useLoggedIn from "../store/loggedin";
+import app from "../Firebase";
+import * as WebBrowser from "expo-web-browser";
+import { ResponseType } from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
+WebBrowser.maybeCompleteAuthSession();
 
-function Login() {
+function Login({ navigation }) {
   const ballAnimatedValue = useRef(new Animated.Value(0)).current;
 
   const xVal = ballAnimatedValue.interpolate({
@@ -35,21 +48,37 @@ function Login() {
       useNativeDriver: true,
     }).start();
   };
-  const MoveOut = () => {
-    // Will change fadeAnim value to 1 in 5 seconds
-    Animated.timing(ballAnimatedValue, {
-      toValue: 0,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId:
+      "694344473866-soltk0t5sdhfl2tg42dhe9p2o61ja2vc.apps.googleusercontent.com",
+  });
+
+  const googlesignout = () => {
+    var auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        // Sign-out successful.
+      })
+      .catch((error) => {
+        // An error happened.
+      });
   };
 
   useEffect(() => {
     MoveIn();
-  });
-  let navigate = useNavigate();
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      // const credential = provider.credential(id_token);
+      signInWithCredential(auth, GoogleAuthProvider.credential(id_token));
+    }
+  }, [response]);
+
   return (
-    <Center w="full" h="full">
+    <Center bg="brand.100" w="full" h="full">
       <Flex align="center" justify="space-evenly">
         <Animated.View style={[animStyle]}>
           <Header
@@ -61,7 +90,7 @@ function Login() {
         <Image source={require("../assets/quiver.png")} />
         <Center w="full" mt="20%">
           <Buttons
-            click={() => navigate("/frontpage")}
+            click={() => promptAsync()}
             title="Login in with Google"
             styles={styles.button}
             textStyle={styles.text}

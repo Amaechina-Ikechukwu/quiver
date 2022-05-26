@@ -20,7 +20,7 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { Link, useNavigate } from "react-router-native";
+
 import {
   Dimensions,
   StyleSheet,
@@ -31,7 +31,7 @@ import {
 import Modals from "../constants/Modals";
 import Footer from "../constants/Footer";
 import { Camera, CameraType } from "expo-camera";
-function BrainstormArena() {
+function BrainstormArena({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const [getModal, setGetModal] = useState(false);
   const [type, setType] = useState("");
@@ -47,8 +47,6 @@ function BrainstormArena() {
 
   let wheight = Dimensions.get("window").height;
   let wht = Dimensions.get("window").width;
-
-  let navigate = useNavigate();
 
   const fakeUsers = [
     {
@@ -300,7 +298,7 @@ function BrainstormArena() {
           w="full"
           {...styles["top"]}
         >
-          <Pressable w="full" onPress={() => navigate("/frontpage")}>
+          <Pressable w="full" onPress={() => navigation.navigate("frontpage")}>
             <HStack
               paddingX={4}
               paddingY={4}
@@ -352,7 +350,7 @@ function BrainstormArena() {
                 />
               </Pressable>
 
-              <Pressable onPress={() => navigate("/frontpage")}>
+              <Pressable onPress={() => navigation.navigate("frontpage")}>
                 <SimpleLineIcons
                   name="call-end"
                   style={{ transform: [{ scaleX: -1 }] }}

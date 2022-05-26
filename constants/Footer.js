@@ -23,7 +23,7 @@ import {
 import { Link, useNavigate } from "react-router-native";
 import { Dimensions, StyleSheet, View } from "react-native";
 import Modals from "../constants/Modals";
-function Footer() {
+function Footer({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const [getModal, setGetModal] = useState(false);
   const [type, setType] = useState("");
@@ -70,8 +70,6 @@ function Footer() {
   };
 
   let wheight = Dimensions.get("window").height;
-
-  let navigate = useNavigate();
 
   return (
     <Box flex={1} w="full" height="auto">
@@ -188,7 +186,7 @@ function Footer() {
           w="full"
           {...styles["top"]}
         >
-          <Pressable w="full" onPress={() => navigate("/frontpage")}>
+          <Pressable w="full" onPress={() => navigation.navigate("frontpage")}>
             <HStack
               paddingX={4}
               paddingY={4}
@@ -226,7 +224,10 @@ function Footer() {
             w="100%"
             backgroundColor={"rgba(0,0,0,0.1)"}
           >
-            <Pressable w="full" onPress={() => navigate("/")}>
+            <Pressable
+              w="full"
+              onPress={() => navigation.navigate("frontpage")}
+            >
               <HStack
                 space={8}
                 alignItems="center"

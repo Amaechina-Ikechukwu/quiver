@@ -11,15 +11,13 @@ import {
 } from "native-base";
 import React, { useState, useEffect } from "react";
 import { Ionicons, SimpleLineIcons } from "@expo/vector-icons";
-import { Link, useNavigate } from "react-router-native";
-function Personal() {
+
+function Personal({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const safeAreaProps = useSafeArea({
     safeAreaTop: true,
     pt: 0,
   });
-
-  let navigate = useNavigate();
 
   return (
     <Box flex={1} w="full" h="100%" {...safeAreaProps}>
@@ -69,7 +67,7 @@ function Personal() {
           w="full"
           {...styles["top"]}
         >
-          <Pressable w="full" onPress={() => navigate("/frontpage")}>
+          <Pressable w="full" onPress={() => navigation.navigate("frontpage")}>
             <HStack
               paddingX={4}
               paddingY={4}
@@ -101,7 +99,10 @@ function Personal() {
             w="100%"
             backgroundColor={"rgba(0,0,0,0.2)"}
           >
-            <Pressable w="full" onPress={() => navigate("/")}>
+            <Pressable
+              w="full"
+              onPress={() => navigation.navigate("frontpage")}
+            >
               <HStack
                 space={3}
                 alignItems="center"
@@ -119,38 +120,6 @@ function Personal() {
           </HStack>
         </Modal.Content>
       </Modal>
-      {/* <Modal
-        w="full"
-        isOpen={showModal}
-        onClose={() => setShowModal(!showModal)}
-      >
-        <Modal.Content
-          borderRadius={0}
-          backgroundColor={"rgba(0,0,0,0.2)"}
-          w="2/5"
-          {...styles["bottom"]}
-        >
-          <HStack
-            paddingX={4}
-            paddingY={4}
-            justifyContent="center"
-            alignItems="center"
-            w="100%"
-            backgroundColor={"rgba(0,0,0,0.2)"}
-          >
-            <Pressable w='full' onPress={() => navigate("/")}>
-              <HStack space={3} alignItems="center" w="full">
-                <SimpleLineIcons
-                  name="call-end"
-                  style={{ transform: [{ scaleX: -1 }] }}
-                  size={24}
-                  color="red"
-                />
-              </HStack>
-            </Pressable>
-          </HStack>
-        </Modal.Content>
-      </Modal> */}
     </Box>
   );
 }

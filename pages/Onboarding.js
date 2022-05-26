@@ -33,7 +33,7 @@ function Unboarding() {
   });
   const [index, setIndex] = useState(1);
   const ballAnimatedValue = useRef(new Animated.Value(0)).current;
-  let navigate = useNavigate();
+
   const seenSplash = useSplash();
   const xVal = ballAnimatedValue.interpolate({
     inputRange: [0, 1],

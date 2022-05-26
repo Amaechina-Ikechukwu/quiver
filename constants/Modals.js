@@ -19,8 +19,6 @@ function Modals(props) {
     pt: 0,
   });
 
-  let navigate = useNavigate();
-
   return (
     <Modal
       w="full"

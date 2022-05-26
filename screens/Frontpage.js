@@ -8,6 +8,7 @@ import {
   HStack,
   VStack,
   Flex,
+  Avatar,
 } from "native-base";
 import React, { useEffect, useState, useRef } from "react";
 import { StatusBar, View, Animated } from "react-native";
@@ -16,15 +17,20 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Link, useNavigate } from "react-router-native";
-function CallPage() {
+import { getAuth } from "firebase/auth";
+import { app } from "../Firebase";
+import useStore from "../store/user";
+
+function CallPage({ navigation, route }) {
   const [showModal, setShowModal] = useState(false);
+  const [user, setUser] = useState({});
   const [index, setindex] = useState(0);
   let [fontsLoaded] = useFonts({
     "Raleway-Regular": require("../assets/fonts/static/Raleway-Regular.ttf"),
     "AlmendraSC-Regular": require("../assets/fonts/AlmendraSC-Regular.ttf"),
   });
   const ballAnimatedValue = useRef(new Animated.Value(0)).current;
-  let navigate = useNavigate();
+
   ////////higher icon/////////
   const xVal = ballAnimatedValue.interpolate({
     inputRange: [0, 1],
@@ -98,26 +104,37 @@ function CallPage() {
     setindex(value);
   };
 
+  const use = useStore((state) => state.user);
+
   useEffect(() => {
+    console.log(use + "from use");
     MoveIn();
-    console.log(index);
   }, [index]);
 
   return (
-    <View style={{ flex: 1, width: "100%" }}>
+    <View style={{ flex: 1, width: "100%", backgroundColor: "#151515" }}>
       <StatusBar barStyle="default" />
       <Box safeAreaTop />
       <HStack
-        px="5"
-        py="5"
+        px="3"
+        py="3"
         justifyContent="space-between"
         alignItems="center"
         w="100%"
       >
         <HStack space={3} alignItems="center" w="full">
-          <Ionicons name="person" size={20} color="#E5E5E5" />
+          <Avatar
+            size={"sm"}
+            bg="brand.400"
+            source={{
+              uri: use !== null ? use.photoURL : null,
+            }}
+          >
+            Q
+          </Avatar>
+
           <Text fontFamily="body" color="white" fontSize="20">
-            user
+            {use !== null ? use.displayName : null}
           </Text>
         </HStack>
       </HStack>
@@ -125,7 +142,7 @@ function CallPage() {
       <View>
         <VStack space={2} alignItems="center">
           <Button
-            onPress={() => navigate("/personalcall")}
+            onPress={() => navigation.navigate("personalcall")}
             justifyContent="flex-start"
             w="full"
             bg="brand.400"
@@ -165,7 +182,7 @@ function CallPage() {
           </Button>
 
           <Button
-            onPress={() => navigate("/brainstorm")}
+            onPress={() => navigation.navigate("brainstorm")}
             justifyContent="flex-start"
             w="full"
             bg="brand.400"
