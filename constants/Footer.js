@@ -22,7 +22,7 @@ import {
 } from "@expo/vector-icons";
 import { Link, useNavigate } from "react-router-native";
 import { Dimensions, StyleSheet, View } from "react-native";
-import Modals from "../constants/Modals";
+import Modals from "../Modals/Modals";
 function Footer({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const [getModal, setGetModal] = useState(false);

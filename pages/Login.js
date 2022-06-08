@@ -17,9 +17,17 @@ import app from "../Firebase";
 import * as WebBrowser from "expo-web-browser";
 import { ResponseType } from "expo-auth-session";
 import * as Google from "expo-auth-session/providers/google";
+import { useFonts } from "expo-font";
+import { collection, doc, getFirestore, setDoc } from "firebase/firestore";
 WebBrowser.maybeCompleteAuthSession();
+import { getDatabase, ref, set } from "firebase/database";
+import useStore from "../store/user";
 
 function Login({ navigation }) {
+  let [fontsLoaded] = useFonts({
+    "Raleway-Regular": require("../assets/fonts/static/Raleway-Regular.ttf"),
+    "AlmendraSC-Regular": require("../assets/fonts/AlmendraSC-Regular.ttf"),
+  });
   const ballAnimatedValue = useRef(new Animated.Value(0)).current;
 
   const xVal = ballAnimatedValue.interpolate({
@@ -64,6 +72,17 @@ function Login({ navigation }) {
         // An error happened.
       });
   };
+  const db = getFirestore(app);
+  const pushToFirestore = (val) => {
+    setDoc(doc(db, "users", val.uid), {
+      phoneNumber: `${val.phoneNumber == "" ? val.phoneNumber : ""}`,
+      displayName: val.currentUser.displayName,
+      photoURL: val.photoURL,
+    }).then(() => {
+      Console.log("updated");
+    });
+  };
+  const toasted = useStore((state) => state.toasted);
 
   useEffect(() => {
     MoveIn();
@@ -72,8 +91,23 @@ function Login({ navigation }) {
 
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
+
       // const credential = provider.credential(id_token);
-      signInWithCredential(auth, GoogleAuthProvider.credential(id_token));
+      signInWithCredential(auth, GoogleAuthProvider.credential(id_token))
+        .then((result) => {
+          const val = result.user;
+          const db = getDatabase();
+          set(ref(db, "users/" + val.uid), {
+            phoneNumber: `${val.phoneNumber !== "" ? val.phoneNumber : ""}`,
+            displayName: val.displayName,
+            photoURL: val.photoURL,
+          });
+          console.log("updated");
+          toasted("profile set");
+        })
+        .catch((err) => {
+          toasted("profile not set");
+        });
     }
   }, [response]);
 

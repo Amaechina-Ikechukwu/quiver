@@ -2,13 +2,20 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import Unboarding from "./pages/Onboarding";
 import React, { useState, useEffect } from "react";
-
+import { KeyboardAvoidingView, useToast } from "native-base";
+import {
+  Ionicons,
+  SimpleLineIcons,
+  Octicons,
+  Foundation,
+  AntDesign,
+} from "@expo/vector-icons";
 import { NavigationContainer } from "@react-navigation/native";
 import { Box, extendTheme, NativeBaseProvider, Spinner } from "native-base";
 import { initializeApp } from "firebase/app";
 import { useFonts } from "expo-font";
 import Login from "./pages/Login";
-import CallPage from "./screens/Frontpage";
+import CallPage from "./screens/Callpage";
 import Loading from "./screens/Loading";
 import Personal from "./callScreens/Personal";
 import BrainstormArena from "./callScreens/Brainstrom";
@@ -20,8 +27,25 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { registerRootComponent } from "expo";
 import { LocalGasStationTwoTone } from "@material-ui/icons";
 import useStore from "./store/user";
-
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import HomePage from "./screens/Homepage";
+import colors from "./colors";
+import ProfilePage from "./screens/Profile";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  push,
+  onDisconnect,
+  set,
+  serverTimestamp,
+  get,
+  child,
+} from "firebase/database";
+import UserProfile from "./screens/Userprofile";
+import Example from "./AllContain";
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 initializeApp(firebaseConfig);
 
 const newColorTheme = {
@@ -74,7 +98,25 @@ const newColorTheme = {
 };
 const theme = extendTheme({ colors: newColorTheme });
 
+function ProfileStackScreen() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        options={{ headerShown: false }}
+        name="Profile"
+        component={ProfilePage}
+      />
+      <Stack.Screen
+        options={{ headerShown: false }}
+        name="UserProfile"
+        component={UserProfile}
+      />
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
+  const isOnline = useStore((state) => state.isOnline);
   let [fontsLoaded] = useFonts({
     "Raleway-Regular": require("./assets/fonts/static/Raleway-Regular.ttf"),
     "AlmendraSC-Regular": require("./assets/fonts/AlmendraSC-Regular.ttf"),
@@ -82,8 +124,11 @@ export default function App() {
   const [log, setLog] = useState(undefined);
   const [loading, setloading] = useState(false);
   const [user, setUser] = useState({});
-
+  const toast = useToast();
   const checkuser = useStore((state) => state.checkuser);
+  const toastt = useStore((state) => state.toast);
+  console.log(toastt);
+  const getNotify = useStore((state) => state.getNotify);
 
   useEffect(() => {
     onAuthStateChanged(getAuth(app), (user) => {
@@ -91,12 +136,13 @@ export default function App() {
         setloading(true);
         setLog(true);
         checkuser();
+        getNotify();
       }
       if (!user) {
         setLog(false);
       }
     });
-  });
+  }, []);
 
   // if (seenSplash.seenSplash == false) {
   //   return (
@@ -147,38 +193,74 @@ export default function App() {
 
   return (
     <NativeBaseProvider theme={theme}>
-      <Box flex={1} backgroundColor="brand.100">
-        <NavigationContainer>
-          <Stack.Navigator>
+      <KeyboardAvoidingView position={"relative"} h="full">
+        <Box flex={1} backgroundColor="brand.100">
+          <NavigationContainer>
             {loading ? (
               <>
-                <Stack.Screen
-                  options={{ headerShown: false }}
-                  name="frontpage"
-                  component={CallPage}
-                  initialParams={{ user: user }}
-                />
-                <Stack.Screen
-                  options={{ headerShown: false }}
-                  name="personalcall"
-                  component={Personal}
-                />
-                <Stack.Screen
-                  options={{ headerShown: false }}
-                  name="brainstorm"
-                  component={BrainstormArena}
-                />
+                <Stack.Navigator>
+                  <Stack.Screen
+                    options={{ headerShown: false }}
+                    name="Example"
+                    component={Example}
+                  />
+
+                  <Stack.Screen
+                    options={{ headerShown: false }}
+                    name="Callpage"
+                    component={CallPage}
+                    initialParams={{ user: user }}
+                  />
+                  <Stack.Screen
+                    options={{ headerShown: false }}
+                    name="personalcall"
+                    component={Personal}
+                  />
+                  <Stack.Screen
+                    options={{ headerShown: false }}
+                    name="brainstorm"
+                    component={BrainstormArena}
+                  />
+                  <Stack.Screen
+                    name="UserProfile"
+                    component={UserProfile}
+                    options={{
+                      title: "Home",
+                      headerStyle: {
+                        backgroundColor: colors.sec,
+                      },
+                      headerTintColor: "#fff",
+                      headerTitleStyle: {
+                        fontWeight: "light",
+                      },
+                    }}
+                  />
+                </Stack.Navigator>
+
+                <Box safeAreaBottom />
               </>
             ) : (
-              <Stack.Screen
-                options={{ headerShown: false }}
-                name="load"
-                component={Loading}
-              />
+              //  <Stack.Screen
+              //   options={{ headerShown: false }}
+              //   name="Callpage"
+              //   component={CallPage}
+              //   initialParams={{ user: user }}
+              // />
+              // <Stack.Screen
+              //   options={{ headerShown: false }}
+              //   name="personalcall"
+              //   component={Personal}
+              // />
+              // <Stack.Screen
+              //   options={{ headerShown: false }}
+              //   name="brainstorm"
+              //   component={BrainstormArena}
+              // />
+              <Loading />
             )}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </Box>
+          </NavigationContainer>
+        </Box>
+      </KeyboardAvoidingView>
     </NativeBaseProvider>
   );
 }

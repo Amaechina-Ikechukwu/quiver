@@ -13,14 +13,14 @@ import {
   Spinner,
   Stack,
 } from "native-base";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   Ionicons,
   SimpleLineIcons,
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-
+import { HMSVideoViewMode } from "@100mslive/react-native-hms";
 import {
   Dimensions,
   StyleSheet,
@@ -28,16 +28,33 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-import Modals from "../constants/Modals";
+import HmsManager, {
+  HMSUpdateListenerActions,
+  HMSConfig,
+  HMSSDK,
+} from "@100mslive/react-native-hms";
+import { HMSContext } from "../constants/HMSContext";
+import Modals from "../Modals/Modals";
 import Footer from "../constants/Footer";
 import { Camera, CameraType } from "expo-camera";
-function BrainstormArena({ navigation }) {
+import useStore from "../store/user";
+import axios from "axios";
+
+function BrainstormArena({ navigation, route }) {
   const [showModal, setShowModal] = useState(false);
   const [getModal, setGetModal] = useState(false);
   const [type, setType] = useState("");
   const [hasPermission, setHasPermission] = useState(null);
   const [ctype, setCType] = useState(CameraType.back);
   const [showCam, setShowCam] = useState(false);
+  const [room, setRoom] = useState("");
+  const [isMute, setMute] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const use = useStore((state) => state.user);
+  const userID = use.uid;
+  const roomID = useRef(route.params.roomID).current;
+
+  console.log(` user: ${userID} - room:${roomID}`);
 
   const [users, setUsers] = useState([]);
   const safeAreaProps = useSafeArea({
@@ -47,6 +64,7 @@ function BrainstormArena({ navigation }) {
 
   let wheight = Dimensions.get("window").height;
   let wht = Dimensions.get("window").width;
+  // const hmsInstance = HmsManager.build();
 
   const fakeUsers = [
     {
@@ -120,12 +138,232 @@ function BrainstormArena({ navigation }) {
 
     setUsers(user);
   };
+  const hmsInstance = new HmsManager();
+  const HmsView = hmsInstance.HmsView;
+  /////////////////////////////////////////////////////////////////////////////////
+  const fetchroom = async () => {
+    const endPoint = "https://prod-in2.100ms.live/api/v2/rooms";
 
+    const body = {
+      name: "ikay",
+      description: "This is a work room " + roomID,
+      recording_info: {
+        enabled: true,
+        upload_info: {
+          type: "s3",
+          location: "test-bucket",
+          prefix: "test-prefix",
+          options: { region: "ap-south-1" },
+          credentials: { key: "aws-access-key", secret: "aws-secret-key" },
+        },
+      },
+    };
+
+    const headers = {
+      Accept: "application/json, text/plain",
+      "Content-Type": "application/json",
+      Authorization:
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3Nfa2V5IjoiNjI4MTMwZWZiZDRmM2I1NmIwNzdmYjg0IiwidHlwZSI6Im1hbmFnZW1lbnQiLCJ2ZXJzaW9uIjoyLCJpYXQiOjE2NTQxNzIwNTgsIm5iZiI6MTY1NDE3MjA1OCwiZXhwIjoxNjU0MjU4NDU4LCJqdGkiOiIwMzg5NGZhNy0yMjAwLTQ1YTYtYTNiNC0wODkxMzUwOGIzOTAifQ.lVf7KMImY2d8rtc9gNQEuJbUCEOzkxgZDbrl6Fp3yzI",
+    };
+
+    const response = await fetch(endPoint, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers,
+    });
+
+    const result = await response.json();
+    console.log(result.id);
+    setRoom(result.name);
+    return result;
+  };
+
+  const fetchToken = async ({ room, userID, role }) => {
+    const endPoint =
+      "https://prod-in2.100ms.live/hmsapi/quiver.app.100ms.live/api/token";
+
+    const body = {
+      room_id: room,
+      user_id: userID,
+      role: role,
+    };
+
+    const headers = {
+      Accept: "application/json, text/plain",
+      "Content-Type": "application/json",
+    };
+
+    const response = await fetch(endPoint, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers,
+    });
+
+    const result = await response.json();
+    console.log(result, "fetch result");
+    return result;
+  };
+
+  async function joinRoom() {
+    if (!hmsInstance) {
+      console.error("HMS Instance not found");
+      return;
+    }
+
+    const { token } = await fetchToken({
+      room: "629221bd2630221c75a33b19",
+      userID: userID,
+      role: "speaker",
+    });
+
+    const HmsConfig = new HMSConfig({
+      username: "love",
+      authToken: token,
+      captureNetworkQualityInPreview: "60fps",
+      endpoint: "https://prod-in2.100ms.live/hmsapi/quiver.app.100ms.live",
+      metadata: "629221bd2630221c75a33b19",
+    });
+    console.log(HmsConfig);
+    if (HmsConfig !== null) {
+      console.log(
+        await hmsInstance
+          .join(HmsConfig)
+          .then((love) => console.log("all good", love))
+          .catch((err) => {
+            console.log(err, "error");
+          })
+      );
+    }
+  }
+  /////////////////////////////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////
   useEffect(() => {
-    ArrangeUsers();
     cam();
-  }, []);
-  console.log(ArrangeUsers);
+    fetchroom();
+    if (room !== "") {
+      joinRoom();
+    }
+    // if (hmsInstance) {
+    //   hmsInstance.addEventListener(HMSUpdateListenerActions.ON_ERROR, (data) =>
+    //     console.error("ON_ERROR_HANDLER", data)
+    //   );
+
+    //   hmsInstance.addEventListener(
+    //     HMSUpdateListenerActions.ON_JOIN,
+    //     ({ room, localPeer, remotePeers }) => {
+    //       const localParticipant = {
+    //         id: localPeer?.peerID,
+    //         name: localPeer?.name,
+    //         role: localPeer?.role?.name,
+    //         avatar: (
+    //           <Circle w="12" h="12" p="2" bg="blue.600">
+    //             {localPeer?.name?.substring(0, 2)?.toLowerCase()}
+    //           </Circle>
+    //         ),
+    //         isMute: localPeer?.audioTrack?.isMute(),
+    //       };
+    //       console.log("local: " + localParticipant);
+    //       const remoteParticipants = remotePeers.map((remotePeer) => {
+    //         console.log("remote peer: " + remotePeer);
+    //         return {
+    //           id: remotePeer?.peerID,
+    //           name: remotePeer?.name,
+    //           role: remotePeer?.role?.name,
+    //           avatar: (
+    //             <Circle w="12" h="12" p="2" bg="blue.600">
+    //               {remotePeer?.name?.substring(0, 2)?.toLowerCase()}
+    //             </Circle>
+    //           ),
+    //           isMute: remotePeer?.audioTrack?.isMute(),
+    //         };
+    //       });
+
+    //       setParticipants([localParticipant, ...remoteParticipants]);
+    //       console.log(participants, "first");
+    //     }
+    //   );
+
+    //   hmsInstance.addEventListener(
+    //     HMSUpdateListenerActions.ON_ROOM_UPDATE,
+    //     (data) => console.log("ON ROOM UPDATE", data)
+    //   );
+
+    //   hmsInstance?.addEventListener(
+    //     HMSUpdateListenerActions.ON_PEER_UPDATE,
+    //     ({ localPeer, remotePeers }) => {
+    //       const localParticipant = {
+    //         id: localPeer?.peerID,
+    //         name: localPeer?.name,
+    //         role: localPeer?.role?.name,
+    //         avatar: (
+    //           <Circle w="12" h="12" p="2" bg="blue.600">
+    //             {localPeer?.name?.substring(0, 2)?.toLowerCase()}
+    //           </Circle>
+    //         ),
+    //         isMute: localPeer?.audioTrack?.isMute(),
+    //       };
+
+    //       const remoteParticipants = remotePeers.map((remotePeer) => {
+    //         return {
+    //           id: remotePeer?.peerID,
+    //           name: remotePeer?.name,
+    //           role: remotePeer?.role?.name,
+    //           avatar: (
+    //             <Circle w="12" h="12" p="2" bg="blue.600">
+    //               {remotePeer?.name?.substring(0, 2)?.toLowerCase()}
+    //             </Circle>
+    //           ),
+    //           isMute: remotePeer?.audioTrack?.isMute(),
+    //         };
+    //       });
+
+    //       setParticipants([localParticipant, ...remoteParticipants]);
+    //       console.log(participants, "second");
+    //     }
+    //   );
+
+    //   hmsInstance?.addEventListener(
+    //     HMSUpdateListenerActions.ON_TRACK_UPDATE,
+    //     ({ localPeer, remotePeers }) => {
+    //       const localParticipant = {
+    //         id: localPeer?.peerID,
+    //         name: localPeer?.name,
+    //         role: localPeer?.role?.name,
+    //         avatar: (
+    //           <Circle w="12" h="12" p="2" bg="blue.600">
+    //             {localPeer?.name?.substring(0, 2)?.toLowerCase()}
+    //           </Circle>
+    //         ),
+    //         isMute: localPeer?.audioTrack?.isMute(),
+    //       };
+
+    //       const remoteParticipants = remotePeers.map((remotePeer) => {
+    //         return {
+    //           id: remotePeer?.peerID,
+    //           name: remotePeer?.name,
+    //           role: remotePeer?.role?.name,
+    //           avatar: (
+    //             <Circle w="12" h="12" p="2" bg="blue.600">
+    //               {remotePeer?.name?.substring(0, 2)?.toLowerCase()}
+    //             </Circle>
+    //           ),
+    //           isMute: remotePeer?.audioTrack?.isMute(),
+    //         };
+    //       });
+
+    //       setParticipants([localParticipant, ...remoteParticipants]);
+    //       console.log(participants, "third");
+    //     }
+    //   );
+    // }
+
+    // joinRoom(hmsInstance, roomID, userID);
+    return () => {};
+  }, [hmsInstance, roomID, userID]);
+  // console.log(ArrangeUsers);
 
   if (users === []) {
     <Spinner size="sm" />;
@@ -226,6 +464,12 @@ function BrainstormArena({ navigation }) {
           justifyContent={"space-between"}
           h="full"
         >
+          {/* <Box
+          display={"flex"}
+          flexDirection="column"
+          justifyContent={"space-between"}
+          h="full"
+        >
           <Pressable
             height={wheight - 60}
             bg="brand.100"
@@ -284,7 +528,7 @@ function BrainstormArena({ navigation }) {
                 />
               )}
             </Box>
-          </Pressable>
+          </Pressable> */}
           {/* /////////////////////footer/////////////////////// */}
           <Footer />
         </Box>
@@ -396,6 +640,10 @@ const styless = StyleSheet.create({
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(12, 1fr)",
+  },
+  hmsView: {
+    height: "100%",
+    width: "100%",
   },
 });
 
