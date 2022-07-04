@@ -3,7 +3,9 @@ const app = express();
 const ngrok = require("ngrok");
 const server = require("http").Server(app);
 var cors = require("cors");
-const port = "https://three-waves-enjoy-197-211-63-60.loca.lt";
+const port = 5000;
+const serverless = require("serverless-http");
+const router = express.Router();
 
 const jwt = require("jsonwebtoken");
 
@@ -29,18 +31,20 @@ const client = new VoximplantApiClient(
 //     .then((ev) => console.log(ev), "sucess")
 //     .catch((err) => console.error(err), "error");
 // };
+
+const secret =
+  "61E59E2084A97A210E20F58977490DC6931DE1296EBA5F7508A305A35A5B7A1D";
+
 function generateAccessToken(username) {
-  return jwt.sign({ username }, process.env.TOKEN_SECRET, {
+  return jwt.sign({ username }, secret, {
     expiresIn: "1800s",
   });
 }
-app.get("/token", (req, res) => {
-  const token = jwt.sign(req.body.userName, {
-    expiresIn: "1800s",
-  });
-  res.send(JSON.stringify(token));
+router.get("/token", (req, res) => {
+  const token = jwt.sign("Obi", secret);
+  res.status(200).json({ message: token }), res.send("Hello World");
 });
-app.get("/", (req, res) => {
+router.post("/createRoom", (req, res) => {
   client.onReady = function () {
     var data = {
       userName: "Gordon",
@@ -64,7 +68,14 @@ app.get("/", (req, res) => {
       .catch((err) => res.json({ message: err }));
   };
 });
+router.get("/", (req, res) => {
+  res.json({ hey: "Welcome to Quiver API" });
+});
+
+app.use("/.netlify/functions/api", router);
 
 server.listen(port, () => {
   console.log("This is Quiver");
 });
+
+module.exports.handler = serverless(app);

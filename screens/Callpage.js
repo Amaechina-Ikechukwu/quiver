@@ -97,65 +97,89 @@ function CallPage({ navigation, route }) {
     await HmsManager.build();
   };
 
-  const getToken = () => {
-    fetch(`https://three-waves-enjoy-197-211-63-60.loca.lt/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ userName: "obi" }),
-    })
-      .then((res) => {
-        try {
-          console.log(res.json, "worked");
-        } catch (err) {
-          console.log(err, "err");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const getToken = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8888/token?name=${user.displayName}`
+      );
+      const json = await response.json();
+      console.log(JSON.stringify(json.message), "worked");
+      const token = JSON.stringify(json.message);
+      regVoxUser(token);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const regVoxUser = async () => {
-    const payload = {
-      userName: user.displayName,
-      userDisplayName: user.displayName,
-      userPassword: user.displayName + "quiver",
-      applicationId: "10464912",
-    };
-    await fetch(`https://three-waves-enjoy-197-211-63-60.loca.lt`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then(async (res) => {
-        try {
-          const jsonRes = await res.json();
-          if (res.status === 200) {
-            ToastAndroid.showWithGravity(
-              jsonRes.message,
-              ToastAndroid.SHORT,
-              ToastAndroid.CENTER
-            );
-          }
-        } catch (err) {
-          console.log(err, "err");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const regVoxUser = async (token) => {
+    try {
+      const payload = {
+        userName: user.displayName,
+        userDisplayName: user.displayName,
+        userPassword: user.displayName + "quiver",
+        applicationId: "10464912",
+      };
+      const response = await fetch(
+        `http://localhost:8888/createRoom?userName=${user.displayName}&userDisplayName=${user.displayName}&userPassword=${user.displayName}&applicationId=10464912`
+        // ,
+        // {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Accept: "application/json",
+        //     Authorization: `Bearer ${token}`,
+        //   },
+        //   body: JSON.stringify(payload),
+        // }
+      );
+      const json = await response.json();
+      console.log(JSON.stringify(json), "worked");
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  // const payload = {
+  //   userName: user.displayName,
+  //   userDisplayName: user.displayName,
+  //   userPassword: user.displayName + "quiver",
+  //   applicationId: "10464912",
+  // };
+  // await fetch(`https://creative-druid-e92ebc.netlify.app/createRoom`, {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     Accept: "application/json",
+  //     Authorization: `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify(payload),
+  // })
+  //   .then(async (res) => {
+  //     try {
+  //       const jsonRes = await res.json();
+  //       if (res.status === 200) {
+  //         ToastAndroid.showWithGravity(
+  //           jsonRes.message,
+  //           ToastAndroid.SHORT,
+  //           ToastAndroid.CENTER
+  //         );
+  //       }
+  //     } catch (err) {
+  //       console.log(err, "err");
+  //     }
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
+  // };
 
   useEffect(() => {
     getToken();
 
     MoveIn();
+    return () => {
+      MoveOut();
+    };
   }, []);
 
   return (
@@ -176,95 +200,95 @@ function CallPage({ navigation, route }) {
           }}
         >
           <View>
-            <VStack space={2} alignItems="center">
-              <Button
-                onPress={() => navigation.navigate("personalcall")}
-                justifyContent="flex-start"
-                w="full"
-                bg="brand.400"
-                rounded="md"
-                shadow={3}
-                color="brand.800"
-                p={2}
-              >
-                <HStack alignItems="center" space={4}>
-                  <Box borderRadius={5} bg="#3385FF" p={1}>
-                    <Ionicons name="person-outline" size={30} color="#fff" />
-                  </Box>
-                  <Text color="brand.800" fontSize={18}>
-                    Personal Call
-                  </Text>
-                </HStack>
-              </Button>
+            <Box>
+              <Box px={2} w="100%">
+                <HStack
+                  w="90%"
+                  alignItems="center"
+                  justifyContent={"space-between"}
+                >
+                  <VStack alignItems="center" space={2}>
+                    <Button
+                      bg="blue.300"
+                      onPress={() => navigation.navigate("personalcall")}
+                      rounded="full"
+                      shadow={3}
+                      color="brand.800"
+                      p={8}
+                    >
+                      <Ionicons name="person-outline" size={30} color="#fff" />
+                    </Button>
+                    <Text color="brand.800" fontSize={12}>
+                      Personal Call
+                    </Text>
+                  </VStack>
+                  {/* /////////////// */}
 
-              {/* /////////////// */}
-              <Button
-                justifyContent="flex-start"
-                w="full"
-                bg="brand.400"
-                rounded="md"
-                shadow={3}
-                color="brand.800"
-                p={2}
-              >
-                <HStack alignItems="center" space={4}>
-                  <Box borderRadius={5} bg="#FFF07C" p={1}>
-                    <Ionicons name="people-outline" size={30} color="#9C8B00" />
-                  </Box>
-                  <Text color="brand.800" fontSize={18}>
-                    Group Call
-                  </Text>
-                </HStack>
-              </Button>
+                  <VStack alignItems="center" space={2}>
+                    <Button
+                      onPress={() => getToken()}
+                      bg="yellow.200"
+                      rounded="full"
+                      shadow={3}
+                      color="brand.800"
+                      p={8}
+                    >
+                      <Ionicons
+                        name="people-outline"
+                        size={30}
+                        color="#9C8B00"
+                      />
+                    </Button>
+                    <Text color="brand.800" fontSize={12}>
+                      Group Call
+                    </Text>
+                  </VStack>
 
-              <Button
-                onPress={() =>
-                  navigation.navigate("brainstorm", {
-                    roomID: Math.random().toString(36).slice(2, 16),
-                    host: use.uid,
-                  })
-                }
-                justifyContent="flex-start"
-                w="full"
-                bg="brand.400"
-                rounded="md"
-                shadow={3}
-                color="brand.800"
-                p={2}
-              >
-                <HStack alignItems="center" space={4}>
-                  <Box borderRadius={5} bg="#FF475D" p={1}>
-                    <SimpleLineIcons name="puzzle" size={30} color="#B60016" />
-                  </Box>
-                  <Text color="brand.800" fontSize={18}>
-                    Brainstorm Arena
-                  </Text>
+                  <VStack alignItems="center" space={2}>
+                    <Button
+                      onPress={() =>
+                        navigation.navigate("brainstorm", {
+                          roomID: Math.random().toString(36).slice(2, 16),
+                          host: use.uid,
+                        })
+                      }
+                      bg="red.200"
+                      rounded="full"
+                      shadow={3}
+                      color="brand.800"
+                      p={8}
+                    >
+                      <SimpleLineIcons
+                        name="puzzle"
+                        size={30}
+                        color="#B60016"
+                      />
+                    </Button>
+                    <Text color="brand.800" fontSize={12}>
+                      Brainstorm Arena
+                    </Text>
+                  </VStack>
                 </HStack>
-              </Button>
-
-              <Button
-                justifyContent="flex-start"
-                w="full"
-                bg="brand.400"
-                rounded="md"
-                shadow={3}
-                color="brand.800"
-                p={2}
-              >
-                <HStack alignItems="center" space={4}>
-                  <Box borderRadius={5} bg="#EB9BFF" p={1}>
+                <VStack alignItems="center" space={2}>
+                  <Button
+                    bg="purple.200"
+                    rounded="full"
+                    shadow={3}
+                    color="brand.800"
+                    p={8}
+                  >
                     <MaterialCommunityIcons
                       name="checkbox-blank-badge-outline"
                       size={30}
                       color="#7C009B"
                     />
-                  </Box>
-                  <Text color="brand.800" fontSize={18}>
-                    Start Meeting
+                  </Button>
+                  <Text color="brand.800" fontSize={12}>
+                    Set Meeting
                   </Text>
-                </HStack>
-              </Button>
-            </VStack>
+                </VStack>
+              </Box>
+            </Box>
             {/* //////////////////////////////session/////////////// */}
 
             <Box p={2}>
@@ -304,8 +328,16 @@ function CallPage({ navigation, route }) {
                   </Button.Group>
                 </Box>
               </Box>
-              <View style={{ width: "100%" }}>
-                <Animated.View
+              <View
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {/* <Animated.View
                   style={[
                     {
                       display: "flex",
@@ -320,7 +352,7 @@ function CallPage({ navigation, route }) {
                   style={[{ display: "flex", alignItems: "center" }, mnimStyle]}
                 >
                   <AntDesign name="exclamation" size={100} color="#E5E5E5" />
-                </Animated.View>
+                </Animated.View> */}
                 <Box
                   display="flex"
                   flexDirection="row"

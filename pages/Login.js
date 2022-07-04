@@ -24,6 +24,7 @@ import { getDatabase, ref, set } from "firebase/database";
 import useStore from "../store/user";
 
 function Login({ navigation }) {
+  const [text, setText] = useState("Login in with Google");
   let [fontsLoaded] = useFonts({
     "Raleway-Regular": require("../assets/fonts/static/Raleway-Regular.ttf"),
     "AlmendraSC-Regular": require("../assets/fonts/AlmendraSC-Regular.ttf"),
@@ -72,17 +73,6 @@ function Login({ navigation }) {
         // An error happened.
       });
   };
-  const db = getFirestore(app);
-  const pushToFirestore = (val) => {
-    setDoc(doc(db, "users", val.uid), {
-      phoneNumber: `${val.phoneNumber == "" ? val.phoneNumber : ""}`,
-      displayName: val.currentUser.displayName,
-      photoURL: val.photoURL,
-    }).then(() => {
-      Console.log("updated");
-    });
-  };
-  const toasted = useStore((state) => state.toasted);
 
   useEffect(() => {
     MoveIn();
@@ -102,13 +92,16 @@ function Login({ navigation }) {
             displayName: val.displayName,
             photoURL: val.photoURL,
           });
+          setText("Loading");
           console.log("updated");
           toasted("profile set");
+          navigation.navigate("Example");
         })
         .catch((err) => {
           toasted("profile not set");
         });
     }
+    return () => {};
   }, [response]);
 
   return (
@@ -125,7 +118,7 @@ function Login({ navigation }) {
         <Center w="full" mt="20%">
           <Buttons
             click={() => promptAsync()}
-            title="Login in with Google"
+            title={text}
             styles={styles.button}
             textStyle={styles.text}
           />

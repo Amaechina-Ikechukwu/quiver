@@ -21,24 +21,47 @@ const getUsers = () => {
   const dbRef = getDatabase();
   const reff = ref(dbRef, `users`);
 
-  onValue(reff, (snapshot) => {
-    const val = snapshot.val();
+  onValue(reff, async (snapshot) => {
+    const val = await snapshot.val();
 
     for (const key in val) {
       check.push({ id: key, info: val[key] });
     }
-    // console.log("check", check);
+
     data = check;
   });
 
-  return data;
+  return check;
+};
+
+const getCliques = () => {
+  let data;
+  let check = [];
+
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `inQuiver`);
+
+  onValue(reff, async (snapshot) => {
+    const val = await snapshot.val();
+
+    for (const key in val) {
+      //check if current user exists as clique to another user
+      if (val[key].clique == getAuth().currentUser.uid) {
+        check.push({ id: key });
+      }
+    }
+
+    data = check;
+  });
+
+  return check;
 };
 
 const getNotice = () => {
   let data;
   let check = [];
   const dbRef = getDatabase();
-  const reff = ref(dbRef, `notifications`, getAuth().currentUser.uid);
+  const reff = ref(dbRef, `notifications/${getAuth().currentUser.uid}/info`);
   const ordered = query(reff, orderByChild("time"));
   onValue(ordered, (snapshot) => {
     const val = snapshot.val();
@@ -46,12 +69,129 @@ const getNotice = () => {
     for (const key in val) {
       check.push({ id: key, info: val[key] });
     }
-
     data = check;
-    console.log("data", data);
   });
 
   return data;
+};
+
+const getPosts = () => {
+  let data = [];
+  let check = [];
+  let filtered = [];
+  const dbRef = getDatabase();
+  const cliques = getCliques();
+  const users = getUsers();
+  const checkUsers = (uid) => {
+    let ccc;
+    const users = getUsers();
+  };
+  const reff = ref(dbRef, `posts/`); //retrieve posts
+  const ordered = query(reff, orderByChild("time")); //orders by time
+  onValue(ordered, async (snapshot) => {
+    const val = await snapshot.val();
+    try {
+      //need to check if the current user belongs to a clique
+      for (const key in val) {
+        const vuid = val[key].uid;
+
+        const getPhoto = () => {
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id == vuid) {
+              return users[i].info.photoURL;
+            }
+          }
+        };
+        const getName = () => {
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id == vuid) {
+              return users[i].info.displayName;
+            }
+          }
+        };
+        const checkHasLiked = () => {
+          for (const item in val[key].likes) {
+            if (val[key].likes[item].from == getAuth().currentUser.uid) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+        };
+        const getHasLikedkey = () => {
+          for (const item in val[key].likes) {
+            if (item == getAuth().currentUser.uid) {
+              return item;
+            }
+          }
+        };
+        // console.log(checkHsaLiked());
+
+        if (
+          val[key].uid.includes(
+            cliques.map((c) => {
+              return c.id;
+            })
+          ) ||
+          val[key].uid.includes(getAuth().currentUser.uid)
+        ) {
+          check.push({
+            id: key,
+            info: val[key],
+            by: getName(vuid),
+            photo: getPhoto(),
+            hasLike: checkHasLiked(),
+            likeKey: getHasLikedkey(),
+          });
+        } else {
+          console.log("nill");
+        }
+      }
+      // const ids = check.map((o) => o.id);
+      // filtered = check.filter(({ id }, index) => !ids.includes(id, index + 1));
+      // filtered.map((x) => {
+      //   console.log("from filtered", x);
+      // });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+  // const ids = check.map((o) => o.id);
+  // filtered.push(check.filter(({ id }, index) => !ids.includes(id, index + 1)));
+  // filtered.map((x) => {
+  //   console.log("from filtered", x);
+  // });
+  return check;
+};
+
+const checkDuplicated = (check) => {
+  const ids = check.map((o) => o.id);
+  const filtered = check.filter(
+    ({ id }, index) => !ids.includes(id, index + 1)
+  );
+  filtered.map((x) => {
+    console.log("from filtered", x);
+  });
+  return check;
+};
+
+const getNoticeCount = () => {
+  let count = 0;
+
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `notifications/${getAuth().currentUser.uid}/info`);
+  const ordered = query(reff, orderByChild("time"));
+  onValue(ordered, (snapshot) => {
+    const val = snapshot.val();
+
+    for (const key in val) {
+      if (val[key].isRead === false) {
+        count++;
+      }
+    }
+  });
+
+  return count;
 };
 
 const connect = async () => {
@@ -92,9 +232,7 @@ const connect = async () => {
   });
   return on;
 };
-getUsers();
-connect();
-getNotice();
+
 const useStore = create((set, get) => ({
   online: false,
   isOnline: (bool) => set((state) => ({ online: bool })),
@@ -103,12 +241,21 @@ const useStore = create((set, get) => ({
   users: [],
   user: getAuth().currentUser,
   toast: "",
+  alert: "",
   notify: [],
+  noticeCount: 0,
+  posts: [],
+  setCliques: getCliques(),
+  // setCliques: (e) => set((state) => getCliques()),
+  getNC: (e) => set((state) => ({ noticeCount: getNoticeCount() })),
   getNotify: (e) => set((state) => ({ notify: getNotice() })),
+  setPosts: (e) => set((state) => ({ posts: getPosts() })),
   checkuser: () => set((state) => ({ user: getAuth().currentUser })),
   isUsers: (e) => set((state) => ({ users: getUsers() })),
   clearToast: () => set(() => ({ toast: "" })),
   toasted: (toast) => set((state) => ({ toast: toast })),
+  clearAlert: () => set(() => ({ alert: "" })),
+  setAlert: (alert) => set((state) => ({ alert: alert })),
 }));
 
 export default useStore;

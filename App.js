@@ -44,6 +44,7 @@ import {
 } from "firebase/database";
 import UserProfile from "./screens/Userprofile";
 import Example from "./AllContain";
+import PostModals from "./screens/PostModal";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 initializeApp(firebaseConfig);
@@ -129,14 +130,59 @@ export default function App() {
   const toastt = useStore((state) => state.toast);
   console.log(toastt);
   const getNotify = useStore((state) => state.getNotify);
+  const setPosts = useStore((state) => state.setPosts);
+
+  const connect = async () => {
+    const db = getDatabase();
+    var myConnectionsRef = await ref(
+      db,
+      `connection/${getAuth().currentUser.uid}`
+    );
+    let on;
+    // stores the timestamp of my last disconnect (the last time I was seen online)
+    var lastOnlineRef = await ref(
+      db,
+      `connection/${getAuth().currentUser.uid}/lastOnline`
+    );
+
+    var connectedRef = await ref(db, ".info/connected");
+    onValue(connectedRef, (snap) => {
+      if (snap.val() === true) {
+        // We're connected (or reconnected)! Do anything here that should happen only if online (or on reconnect)
+        const con = push(myConnectionsRef);
+
+        // When I disconnect, remove this device
+        onDisconnect(con).remove();
+
+        // Add this device to my connections list
+        // this value could contain info about the device or a timestamp too
+        set(con, true);
+
+        // When I disconnect, update the last time I was seen online
+        onDisconnect(lastOnlineRef).set(serverTimestamp());
+        console.log("connected");
+
+        isOnline(true);
+      } else {
+        console.log("not connected");
+        isOnline(false);
+      }
+    });
+    return on;
+  };
 
   useEffect(() => {
     onAuthStateChanged(getAuth(app), (user) => {
       if (user) {
         setloading(true);
         setLog(true);
+        connect();
         checkuser();
         getNotify();
+
+        setTimeout(() => {
+          setPosts();
+        }, 13000);
       }
       if (!user) {
         setLog(false);
@@ -225,7 +271,22 @@ export default function App() {
                     name="UserProfile"
                     component={UserProfile}
                     options={{
-                      title: "Home",
+                      title: "Back",
+                      headerStyle: {
+                        backgroundColor: colors.sec,
+                      },
+                      headerTintColor: "#fff",
+                      headerTitleStyle: {
+                        fontWeight: "light",
+                      },
+                    }}
+                  />
+
+                  <Stack.Screen
+                    name="Postpage"
+                    component={PostModals}
+                    options={{
+                      title: "Post",
                       headerStyle: {
                         backgroundColor: colors.sec,
                       },
@@ -240,22 +301,6 @@ export default function App() {
                 <Box safeAreaBottom />
               </>
             ) : (
-              //  <Stack.Screen
-              //   options={{ headerShown: false }}
-              //   name="Callpage"
-              //   component={CallPage}
-              //   initialParams={{ user: user }}
-              // />
-              // <Stack.Screen
-              //   options={{ headerShown: false }}
-              //   name="personalcall"
-              //   component={Personal}
-              // />
-              // <Stack.Screen
-              //   options={{ headerShown: false }}
-              //   name="brainstorm"
-              //   component={BrainstormArena}
-              // />
               <Loading />
             )}
           </NavigationContainer>

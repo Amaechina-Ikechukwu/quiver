@@ -1,8 +1,6 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
 import Unboarding from "./pages/Onboarding";
 import React, { useState, useEffect } from "react";
-import { KeyboardAvoidingView, useToast } from "native-base";
+
 import {
   Ionicons,
   SimpleLineIcons,
@@ -10,22 +8,16 @@ import {
   Foundation,
   AntDesign,
 } from "@expo/vector-icons";
-import { NavigationContainer } from "@react-navigation/native";
+
 import { Box, extendTheme, NativeBaseProvider, Spinner } from "native-base";
-import { initializeApp } from "firebase/app";
-import { useFonts } from "expo-font";
-import Login from "./pages/Login";
+
 import CallPage from "./screens/Callpage";
-import Loading from "./screens/Loading";
+
 import Personal from "./callScreens/Personal";
-import BrainstormArena from "./callScreens/Brainstrom";
-import useSplash from "./store/Splash";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import useLoggedIn from "./store/loggedin";
+
 import { app, firebaseConfig } from "./Firebase";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { registerRootComponent } from "expo";
-import { LocalGasStationTwoTone } from "@material-ui/icons";
+
 import useStore from "./store/user";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomePage from "./screens/Homepage";
@@ -43,55 +35,23 @@ import {
   child,
 } from "firebase/database";
 import UserProfile from "./screens/Userprofile";
-import Notifications from "./screens/Notifications";
+import Notify from "./pages/Notify";
+import PostPage from "./screens/Postpage";
 
 const Tab = createBottomTabNavigator();
 
 function Example({ navigation }) {
-  const isOnline = useStore((state) => state.isOnline);
-
-  const connect = async () => {
-    const db = getDatabase();
-    var myConnectionsRef = await ref(
-      db,
-      `connection/${getAuth().currentUser.uid}`
-    );
-    let on;
-    // stores the timestamp of my last disconnect (the last time I was seen online)
-    var lastOnlineRef = await ref(
-      db,
-      `connection/${getAuth().currentUser.uid}/lastOnline`
-    );
-
-    var connectedRef = await ref(db, ".info/connected");
-    onValue(connectedRef, (snap) => {
-      if (snap.val() === true) {
-        // We're connected (or reconnected)! Do anything here that should happen only if online (or on reconnect)
-        const con = push(myConnectionsRef);
-
-        // When I disconnect, remove this device
-        onDisconnect(con).remove();
-
-        // Add this device to my connections list
-        // this value could contain info about the device or a timestamp too
-        set(con, true);
-
-        // When I disconnect, update the last time I was seen online
-        onDisconnect(lastOnlineRef).set(serverTimestamp());
-        console.log("connected");
-
-        isOnline(true);
-      } else {
-        console.log("not connected");
-        isOnline(false);
-      }
-    });
-    return on;
-  };
   const getNotify = useStore((state) => state.getNotify);
+  const getNC = useStore((state) => state.getNC);
+  const noticeCount = useStore((state) => state.noticeCount);
+
+  const setPosts = useStore((state) => state.setPosts);
+  const setCliques = useStore((state) => state.setCliques);
+
   useEffect(() => {
     getNotify();
-    connect();
+    getNC();
+    // setPosts();
   });
   return (
     <Box flex={1}>
@@ -113,7 +73,7 @@ function Example({ navigation }) {
       >
         <Tab.Screen
           name="Home"
-          component={HomePage}
+          component={PostPage}
           options={{
             tabBarLabel: "Home",
             tabBarIcon: ({ focused, size, color }) => (
@@ -126,9 +86,9 @@ function Example({ navigation }) {
           }}
         />
 
-        <Tab.Screen
+        {/* <Tab.Screen
           name="Talks"
-          component={Personal}
+          component={PostPage}
           options={{
             tabBarIcon: ({ focused, size }) => (
               <Foundation
@@ -138,7 +98,7 @@ function Example({ navigation }) {
               />
             ),
           }}
-        />
+        /> */}
 
         <Tab.Screen
           name="Call"
@@ -155,7 +115,7 @@ function Example({ navigation }) {
         />
         <Tab.Screen
           name="Notify"
-          component={Notifications}
+          component={Notify}
           options={{
             tabBarIcon: ({ focused, size }) => (
               <Ionicons
@@ -164,6 +124,7 @@ function Example({ navigation }) {
                 color={focused ? colors.textColor : colors.disbrand}
               />
             ),
+            tabBarBadge: noticeCount || null,
           }}
         />
         <Tab.Screen
