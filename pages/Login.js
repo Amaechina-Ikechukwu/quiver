@@ -92,9 +92,10 @@ function Login({ navigation }) {
             displayName: val.displayName,
             photoURL: val.photoURL,
           });
+          set(ref(db, "inQuiver/" + val.uid), val.uid);
           setText("Loading");
           console.log("updated");
-          toasted("profile set");
+          // toasted("profile set");
           navigation.navigate("Example");
         })
         .catch((err) => {

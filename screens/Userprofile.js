@@ -114,9 +114,7 @@ function UserProfile({ route, navigation }) {
       // The screen is focused
       // Call any action
     });
-    return () => {
-      unsubscribe;
-    };
+    return () => {};
   }, [navigation]);
   try {
     return (

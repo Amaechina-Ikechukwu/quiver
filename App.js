@@ -31,6 +31,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomePage from "./screens/Homepage";
 import colors from "./colors";
 import ProfilePage from "./screens/Profile";
+import useNewStore from "./store/post";
 import {
   getDatabase,
   ref,
@@ -131,6 +132,8 @@ export default function App() {
   console.log(toastt);
   const getNotify = useStore((state) => state.getNotify);
   const setPosts = useStore((state) => state.setPosts);
+  const setQuiver = useStore((state) => state.setQuiver);
+  const getLikes = useStore((state) => state.getLikes);
 
   const connect = async () => {
     const db = getDatabase();
@@ -179,10 +182,12 @@ export default function App() {
         connect();
         checkuser();
         getNotify();
-
+        setQuiver();
+        getLikes();
+        setPosts();
         setTimeout(() => {
           setPosts();
-        }, 13000);
+        }, 9300);
       }
       if (!user) {
         setLog(false);
