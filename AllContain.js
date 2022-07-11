@@ -36,7 +36,7 @@ import {
 } from "firebase/database";
 import UserProfile from "./screens/Userprofile";
 import Notify from "./pages/Notify";
-import PostPage from "./screens/Postpage";
+import PostPage from "./screens/PostFolder/Postpage";
 
 const Tab = createBottomTabNavigator();
 
@@ -51,6 +51,7 @@ function Example({ navigation }) {
   useEffect(() => {
     getNotify();
     getNC();
+
     // setPosts();
   });
   return (

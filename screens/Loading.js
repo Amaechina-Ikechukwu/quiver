@@ -9,7 +9,7 @@ function Loading() {
       alignItems={"center"}
       justifyContent={"center"}
     >
-      <Spinner size="sm" />
+      <Spinner size="sm" color={"brand.700"} />
     </Box>
   );
 }

@@ -21,6 +21,7 @@ import Personal from "./callScreens/Personal";
 import BrainstormArena from "./callScreens/Brainstrom";
 import useSplash from "./store/Splash";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import useLoggedIn from "./store/loggedin";
 import { app, firebaseConfig } from "./Firebase";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
@@ -45,9 +46,11 @@ import {
 } from "firebase/database";
 import UserProfile from "./screens/Userprofile";
 import Example from "./AllContain";
-import PostModals from "./screens/PostModal";
+import PostModals from "./screens/PostFolder/PostModal";
+import CommentPage from "./pages/CommentsFolder/Comments";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const RootStack = createStackNavigator();
 initializeApp(firebaseConfig);
 
 const newColorTheme = {
@@ -187,7 +190,7 @@ export default function App() {
         setPosts();
         setTimeout(() => {
           setPosts();
-        }, 9300);
+        }, 2000);
       }
       if (!user) {
         setLog(false);
@@ -249,30 +252,30 @@ export default function App() {
           <NavigationContainer>
             {loading ? (
               <>
-                <Stack.Navigator>
-                  <Stack.Screen
+                <RootStack.Navigator>
+                  <RootStack.Screen
                     options={{ headerShown: false }}
                     name="Example"
                     component={Example}
                   />
 
-                  <Stack.Screen
+                  <RootStack.Screen
                     options={{ headerShown: false }}
                     name="Callpage"
                     component={CallPage}
                     initialParams={{ user: user }}
                   />
-                  <Stack.Screen
+                  <RootStack.Screen
                     options={{ headerShown: false }}
                     name="personalcall"
                     component={Personal}
                   />
-                  <Stack.Screen
+                  <RootStack.Screen
                     options={{ headerShown: false }}
                     name="brainstorm"
                     component={BrainstormArena}
                   />
-                  <Stack.Screen
+                  <RootStack.Screen
                     name="UserProfile"
                     component={UserProfile}
                     options={{
@@ -287,7 +290,7 @@ export default function App() {
                     }}
                   />
 
-                  <Stack.Screen
+                  <RootStack.Screen
                     name="Postpage"
                     component={PostModals}
                     options={{
@@ -301,7 +304,24 @@ export default function App() {
                       },
                     }}
                   />
-                </Stack.Navigator>
+
+                  <RootStack.Screen
+                    name="Comments"
+                    component={CommentPage}
+                    options={{
+                      title: "Post",
+                      headerStyle: {
+                        backgroundColor: colors.sec,
+                      },
+                      headerTintColor: "#fff",
+                      headerTitleStyle: {
+                        fontWeight: "light",
+                      },
+                      headerShown: false,
+                      presentation: "modal",
+                    }}
+                  />
+                </RootStack.Navigator>
 
                 <Box safeAreaBottom />
               </>

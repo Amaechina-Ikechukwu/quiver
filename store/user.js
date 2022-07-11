@@ -49,7 +49,7 @@ const getCliques = () => {
   onChildAdded(ordered, async (snapshot) => {
     if (snapshot.key == getAuth().currentUser.uid) {
       check.push({ id: snapshot.val() });
-      console.log(snapshot.val(), "clique val");
+      // console.log(snapshot.val(), "clique val");
     }
   });
 
@@ -287,63 +287,61 @@ const searchLikes = () => {
   return newData;
 };
 
-const sortPost = (data) => {
-  const newData = data.sort((x, y) => {
-    return x.info.time - y.info.time;
-  });
-  try {
-    for (var i = 0; i < newData.length; i++) {
-      console.log("from newData", newData[i]);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-
-  return newData;
-};
-
-const GetLiked = (postId) => {
-  console.log(postId);
+const getComments = (postid) => {
+  console.log(postid, "in post comment");
+  let data = [];
+  let check = [];
+  let filtered = [];
   const dbRef = getDatabase();
   const cliques = getCliques();
   const users = getUsers();
-  let bool;
-  const reff = ref(dbRef, `likes/${postId}`); //retrieve posts
+  const reff = ref(dbRef, `comments/${postid}`); //retrieve posts
   const ordered = query(reff, orderByValue("time")); //orders by time
-  onChildAdded(ordered, async (snapshot) => {
-    const val = await snapshot.val().from;
-    if (val == MeAsAUser()) {
-      console.log(postId);
-      return val;
-    }
-  });
-};
+  onChildAdded(reff, async (snapshot) => {
+    // const val = await snapshot.val();
+    // console.log(val);
+    try {
+      //need to check if the current user belongs to a clique
+      // snapshot.forEach((key) => {
+      const vuid = await snapshot.val().by;
+      const value = await snapshot.val();
 
-const AppendLike = () => {
-  posts = getAutoPosts();
-  for (var i = 0; i < posts.length; i++) {
-    console.log("from posts", posts[i]);
-  }
-  let newPost = [];
-  const likeIdArray = searchLikes().map((u) => {
-    return u.likeId;
-  });
-  const likeInfoArray = searchLikes().map((u) => {
-    return u.likeInfo;
-  });
-  for (var i = 0; i < posts.length; i++) {
-    if (posts[i].info.uid.includes(inQuiver)) {
-      newPost.push({
-        by: posts[i].by,
-        like: likeIdArray.includes(post[i].id) ? true : false,
-        isMe: likeInfoArray.includes(getAuth().currentUser.uid) ? true : false,
-        id: posts[i].id,
-        info: posts[i].info,
-        photo: posts[i].photo,
+      const getPhoto = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == vuid) {
+            return users[i].info.photoURL;
+          }
+        }
+      };
+      const getName = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == vuid) {
+            return users[i].info.displayName;
+          }
+        }
+      };
+
+      data.push({
+        id: snapshot.key,
+        comment: snapshot.val().comment,
+        by: getName(vuid),
+        photo: getPhoto(),
+        time: snapshot.val().time,
+        uid: vuid,
       });
+    } catch (e) {
+      console.log(e);
     }
-  }
-  return newPost;
+    //  try {
+    //    for (var i = 0; i < data.length; i++) {
+    //      console.log("from newData", data[i]);
+    //    }
+    //  } catch (e) {
+    //    console.log(e, "from data error");
+    //  }
+  });
+
+  return data;
 };
 
 const getNoticeCount = () => {
@@ -365,18 +363,12 @@ const getNoticeCount = () => {
   return count;
 };
 
-const connect = async () => {
+const connect = async (uid) => {
   const db = getDatabase();
-  var myConnectionsRef = await ref(
-    db,
-    `connection/${getAuth().currentUser.uid}`
-  );
+  var myConnectionsRef = await ref(db, `connection/${uid}`);
   let on;
   // stores the timestamp of my last disconnect (the last time I was seen online)
-  var lastOnlineRef = await ref(
-    db,
-    `connection/${getAuth().currentUser.uid}/lastOnline`
-  );
+  var lastOnlineRef = await ref(db, `connection/${uid}/lastOnline`);
 
   var connectedRef = await ref(db, ".info/connected");
   onValue(connectedRef, (snap) => {
@@ -393,14 +385,13 @@ const connect = async () => {
 
       // When I disconnect, update the last time I was seen online
       onDisconnect(lastOnlineRef).set(serverTimestamp());
-      console.log("connected");
 
       on = true;
     } else {
-      console.log("not connected");
       on = false;
     }
   });
+
   return on;
 };
 
@@ -419,6 +410,8 @@ const useStore = create((set, get) => ({
   setCliques: getCliques(),
   inQuiver: [],
   likes: [],
+  connected: Boolean,
+  postComment: [],
   // setCliques: (e) => set((state) => getCliques()),
   getNC: (e) => set((state) => ({ noticeCount: getNoticeCount() })),
   getNotify: (e) => set((state) => ({ notify: getNotice() })),
@@ -431,6 +424,8 @@ const useStore = create((set, get) => ({
   setAlert: (alert) => set((state) => ({ alert: alert })),
   setQuiver: () => set(() => ({ inQuiver: cliquesArray() })),
   getLikes: () => set(() => ({ likes: searchLikes() })),
+  getConnection: (uid) => set(() => ({ connected: connect(uid) })),
+  setComment: (postid) => set(() => ({ postComment: getComments(postid) })),
 }));
 
 export default useStore;
