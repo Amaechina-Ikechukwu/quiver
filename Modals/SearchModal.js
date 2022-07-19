@@ -27,11 +27,14 @@ import { Link } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 import CText from "../constants/Text";
 import { TramOutlined } from "@material-ui/icons";
-function SearchModal(props, { navigation }) {
-  const [showModal, setShowModal] = useState(false);
+import IconPress from "../constants/IconPress";
+import { useNavigation } from "@react-navigation/native";
+function SearchModal(props) {
+  const [userToSearch, setuser] = useState();
   const [searchWords, setSearchWords] = useState("");
   const [searchResult, setsearchResult] = useState();
   const [found, setFound] = useState();
+  const isUsers = useStore((state) => state.isUsers);
   const safeAreaProps = useSafeArea({
     safeAreaTop: true,
     pt: 0,
@@ -41,9 +44,20 @@ function SearchModal(props, { navigation }) {
     setSearchWords(e);
   };
   const users = useStore((state) => state.users);
+  const setSearchedUserData = useStore((state) => state.setSearchedUserData);
   const quiver = useStore((state) => state.quiver);
+  const setWhoseCliques = useStore((state) => state.setWhoseCliques);
+  const sethasCliques = useStore((state) => state.sethasCliques);
+
+  useEffect(() => {
+    setTimeout(() => {
+      clearToast();
+    }, 2000);
+    return () => {};
+  });
   const search = (e) => {
     Keyboard.dismiss();
+    isUsers();
 
     let list = [];
 
@@ -60,11 +74,11 @@ function SearchModal(props, { navigation }) {
             if (x.info.displayName.includes(searchWords)) {
               if (x.id !== getAuth().currentUser.uid) {
                 results.push(x);
-                console.log(x);
+                console.log("from search", x);
                 setFound(false);
-                setsearchResult(results);
               }
             }
+            setsearchResult(results);
           } catch (e) {
             console.log(e);
           }
@@ -73,17 +87,24 @@ function SearchModal(props, { navigation }) {
     }
   };
   const closing = () => {
-    setsearchResult({});
+    setsearchResult();
     setSearchWords("");
     setFound();
     props.close();
   };
+  const navigation = useNavigation();
 
-  useEffect(() => {
-    setTimeout(() => {
-      clearToast();
-    }, 2000);
-  });
+  const navigate = (item) => {
+    setWhoseCliques(item.id);
+    sethasCliques(item.id);
+    setSearchedUserData(item.id);
+    navigation.navigate("UserProfile", {
+      itemID: item.id,
+      itemS: item.info,
+      post: item.info.posts,
+    });
+  };
+
   return (
     <Modal
       w="full"
@@ -165,45 +186,42 @@ function SearchModal(props, { navigation }) {
                     h="full"
                     data={searchResult}
                     renderItem={({ item }) => (
-                      <Box
-                        borderBottomWidth="1"
-                        _dark={{
-                          borderColor: "brand.300",
-                        }}
-                        borderColor="brand.400"
-                        py="2"
-                        w={"full"}
-                      >
-                        <Link
-                          to={{
-                            screen: "UserProfile",
-                            params: { itemID: item.id, item: item.info },
-                          }}
-                        >
-                          <HStack
+                      <IconPress
+                        click={() => navigate(item)}
+                        children={
+                          <Box
+                            borderBottomWidth="1"
+                            _dark={{
+                              borderColor: "brand.300",
+                            }}
+                            borderColor="brand.400"
+                            py="2"
                             w={"full"}
-                            space={3}
-                            alignItems="center"
-                            justifyContent="space-between"
                           >
-                            <Avatar
-                              size="48px"
-                              source={{
-                                uri: item.info.photoURL || quiver,
-                              }}
-                            />
-                            <VStack>
-                              <Text
-                                _dark={{
-                                  color: "warmGray.50",
+                            <HStack
+                              w={"full"}
+                              space={3}
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
+                              <Avatar
+                                size="48px"
+                                source={{
+                                  uri: item.info.photoURL || quiver,
                                 }}
-                                color="brand.800"
-                              >
-                                {item.info.displayName}
-                              </Text>
-                            </VStack>
-                            <Spacer />
-                            {/* <Text
+                              />
+                              <VStack>
+                                <Text
+                                  _dark={{
+                                    color: "warmGray.50",
+                                  }}
+                                  color="brand.800"
+                                >
+                                  {item.info.displayName}
+                                </Text>
+                              </VStack>
+                              <Spacer />
+                              {/* <Text
                           fontSize="xs"
                           _dark={{
                             color: "warmGray.50",
@@ -213,9 +231,10 @@ function SearchModal(props, { navigation }) {
                         >
                           {"yes"}
                         </Text> */}
-                          </HStack>
-                        </Link>
-                      </Box>
+                            </HStack>
+                          </Box>
+                        }
+                      />
                     )}
                     keyExtractor={(item) => item.id}
                   />

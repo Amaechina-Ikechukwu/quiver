@@ -34,7 +34,7 @@ import {
   get,
   child,
 } from "firebase/database";
-import UserProfile from "./screens/Userprofile";
+import UserProfile from "./pages/UserProfile/Userprofile";
 import Notify from "./pages/Notify";
 import PostPage from "./screens/PostFolder/Postpage";
 
@@ -53,6 +53,9 @@ function Example({ navigation }) {
     getNC();
 
     // setPosts();
+    // setTimeout(() => {
+    //   setPosts();
+    // }, 2000);
   });
   return (
     <Box flex={1}>
@@ -74,7 +77,7 @@ function Example({ navigation }) {
       >
         <Tab.Screen
           name="Home"
-          component={PostPage}
+          component={HomePage}
           options={{
             tabBarLabel: "Home",
             tabBarIcon: ({ focused, size, color }) => (

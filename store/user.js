@@ -17,9 +17,10 @@ import {
   onChildAdded,
 } from "firebase/database";
 
-const MeAsAUser = async () => {
-  const currentUser = await getAuth().currentUser.uid;
-  return currentUser;
+const MeAsAUser = () => {
+  let data = [];
+  data = getAuth().currentUser;
+  return data;
 };
 const getUsers = () => {
   let data;
@@ -46,11 +47,54 @@ const getCliques = () => {
   const dbRef = getDatabase();
   const reff = ref(dbRef, `inQuiver`); //retrieve posts
   const ordered = query(reff); //orders by time
-  onChildAdded(ordered, async (snapshot) => {
+  onChildAdded(reff, async (snapshot) => {
     if (snapshot.key == getAuth().currentUser.uid) {
       check.push({ id: snapshot.val() });
       // console.log(snapshot.val(), "clique val");
     }
+  });
+
+  return check;
+};
+const gethasCliques = () => {
+  let data;
+  let check = [];
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `inQuiver/${getAuth().currentUser.uid}`); //retrieve posts
+  const ordered = query(reff); //orders by time
+  onChildAdded(ordered, async (snapshot) => {
+    check.push({ id: snapshot.val() });
+    // console.log(snapshot.val(), "clique val");
+  });
+
+  return check;
+};
+
+const whichCliques = (id) => {
+  let data;
+  let check = [];
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `inQuiver`); //retrieve posts
+  const ordered = query(reff); //orders by time
+  onChildAdded(ordered, async (snapshot) => {
+    if (snapshot.key == id) {
+      check.push({ id: snapshot.val() });
+      // console.log(snapshot.val(), "clique val");
+    }
+  });
+
+  return check;
+};
+
+const hasCliques = (id) => {
+  let data;
+  let check = [];
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `inQuiver/${id}`); //retrieve posts
+  const ordered = query(reff); //orders by time
+  onChildAdded(ordered, async (snapshot) => {
+    check.push({ id: snapshot.val() });
+    // console.log(snapshot.val(), "clique val");
   });
 
   return check;
@@ -217,6 +261,80 @@ const getAutoPosts = () => {
           }
         }
       };
+
+      let Qid = [];
+      getCliques().map((q) => {
+        Qid.push(q.id.id);
+      });
+
+      if (Qid.includes(snapshot.val().uid)) {
+        check.push({
+          id: snapshot.key,
+          info: snapshot.val(),
+          by: getName(vuid),
+          photo: getPhoto(),
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    // try {
+    //   for (var i = 0; i < data.length; i++) {
+    //     console.log("from newdata", data[i]);
+    //   }
+    // } catch (e) {
+    //   console.log(e, "from data error");
+    // }
+  });
+  data.push(
+    check.sort((x, y) => {
+      return y.info.time - x.info.time;
+    })
+  );
+
+  try {
+    for (var i = 0; i < data.length; i++) {
+      console.log("from newdata", data[i]);
+    }
+  } catch (e) {
+    console.log(e, "from data error");
+  }
+
+  return check;
+};
+
+const currentUserPost = () => {
+  let data = [];
+  let check = [];
+  let filtered = [];
+  const dbRef = getDatabase();
+  const cliques = getCliques();
+  const users = getUsers();
+  const reff = ref(dbRef, `posts/`); //retrieve posts
+  const ordered = query(reff, orderByValue("time")); //orders by time
+  onChildAdded(reff, async (snapshot) => {
+    // const val = await snapshot.val();
+    // console.log(val);
+    try {
+      //need to check if the current user belongs to a clique
+      // snapshot.forEach((key) => {
+      const vuid = await snapshot.val().uid;
+      const value = await snapshot.val();
+
+      const getPhoto = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == vuid) {
+            return users[i].info.photoURL;
+          }
+        }
+      };
+      const getName = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == vuid) {
+            return users[i].info.displayName;
+          }
+        }
+      };
       const checkHasLiked = () => {
         const reff = ref(dbRef, `likes/${snapshot.key}`); //retrieve posts
         const ordered = query(reff); //orders by time
@@ -239,20 +357,57 @@ const getAutoPosts = () => {
           }
         }
       };
-      data.push({
-        id: snapshot.key,
-        info: snapshot.val(),
-        by: getName(vuid),
-        photo: getPhoto(),
-        hasLike: checkHasLiked(),
-        likeKey: getHasLikedkey(),
-      });
+      if (vuid == getAuth().currentUser.uid) {
+        data.push({
+          id: snapshot.key,
+          info: snapshot.val(),
+        });
+      }
     } catch (e) {
       console.log(e);
     }
     // try {
     //   for (var i = 0; i < data.length; i++) {
-    //     console.log("from newData", data[i]);
+    //     console.log("from newData", data[i].id);
+    //   }
+    // } catch (e) {
+    //   console.log(e, "from data error");
+    // }
+  });
+
+  return data;
+};
+
+const searchedUserPost = (uid) => {
+  let data = [];
+  let check = [];
+  let filtered = [];
+  const dbRef = getDatabase();
+  const cliques = getCliques();
+  const users = getUsers();
+  const reff = ref(dbRef, `posts/`); //retrieve posts
+  const ordered = query(reff, orderByValue("time")); //orders by time
+  onChildAdded(reff, async (snapshot) => {
+    // const val = await snapshot.val();
+    // console.log(val);
+    try {
+      //need to check if the current user belongs to a clique
+      // snapshot.forEach((key) => {
+      const vuid = await snapshot.val().uid;
+      const value = await snapshot.val();
+
+      if (vuid == uid) {
+        data.push({
+          id: snapshot.key,
+          info: snapshot.val(),
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    // try {
+    //   for (var i = 0; i < data.length; i++) {
+    //     console.log("from newData", data[i].id);
     //   }
     // } catch (e) {
     //   console.log(e, "from data error");
@@ -344,6 +499,41 @@ const getComments = (postid) => {
   return data;
 };
 
+const getLikes = (postid) => {
+  console.log(postid, "in post comment");
+  let data = [];
+  let count = Number;
+  let filtered = [];
+  const dbRef = getDatabase();
+  const cliques = getCliques();
+  const users = getUsers();
+  const reff = ref(dbRef, `likes/${postid}`); //retrieve posts
+  const ordered = query(reff, orderByValue("time")); //orders by time
+  onChildAdded(reff, async (snapshot) => {
+    // const val = await snapshot.val();
+    // console.log(val);
+    try {
+      //need to check if the current user belongs to a clique
+      // snapshot.forEach((key) => {
+      const vuid = await snapshot.val().by;
+      const value = await snapshot.val();
+
+      data.push({ value: value });
+    } catch (e) {
+      console.log(e);
+    }
+    //  try {
+    //    for (var i = 0; i < data.length; i++) {
+    //      console.log("from newData", data[i]);
+    //    }
+    //  } catch (e) {
+    //    console.log(e, "from data error");
+    //  }
+  });
+
+  return data;
+};
+
 const getNoticeCount = () => {
   let count = 0;
 
@@ -409,9 +599,15 @@ const useStore = create((set, get) => ({
   posts: [],
   setCliques: getCliques(),
   inQuiver: [],
+  inHasQuiver: [],
   likes: [],
   connected: Boolean,
   postComment: [],
+  userData: [],
+  likesCount: [],
+  whoseQuiver: [],
+  hasQuiver: [],
+  searchedUser: [],
   // setCliques: (e) => set((state) => getCliques()),
   getNC: (e) => set((state) => ({ noticeCount: getNoticeCount() })),
   getNotify: (e) => set((state) => ({ notify: getNotice() })),
@@ -422,10 +618,19 @@ const useStore = create((set, get) => ({
   toasted: (toast) => set((state) => ({ toast: toast })),
   clearAlert: () => set(() => ({ alert: "" })),
   setAlert: (alert) => set((state) => ({ alert: alert })),
-  setQuiver: () => set(() => ({ inQuiver: cliquesArray() })),
+  setQuiver: () => set(() => ({ inQuiver: getCliques() })),
+  setHasQuiver: () => set(() => ({ inHasQuiver: gethasCliques() })),
   getLikes: () => set(() => ({ likes: searchLikes() })),
   getConnection: (uid) => set(() => ({ connected: connect(uid) })),
   setComment: (postid) => set(() => ({ postComment: getComments(postid) })),
+  setLike: (postid) => set(() => ({ likesCount: getLikes(postid) })),
+  setUserData: () => set(() => ({ userData: currentUserPost() })),
+  setSearchedUserData: (userid) =>
+    set(() => ({ searchedUser: searchedUserPost(userid) })),
+  setWhoseCliques: (userId) =>
+    set(() => ({ whoseQuiver: whichCliques(userId) })),
+  sethasCliques: (userId) => set(() => ({ hasQuiver: hasCliques(userId) })),
+  setUser: () => set(() => ({ user: MeAsAUser() })),
 }));
 
 export default useStore;

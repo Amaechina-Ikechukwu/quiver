@@ -44,10 +44,13 @@ import {
   get,
   child,
 } from "firebase/database";
-import UserProfile from "./screens/Userprofile";
+import UserProfile from "./pages/UserProfile/Userprofile";
 import Example from "./AllContain";
 import PostModals from "./screens/PostFolder/PostModal";
 import CommentPage from "./pages/CommentsFolder/Comments";
+import PhotosRender from "./screens/ProfileContents/PhotosRender";
+
+import EditProfile from "./screens/ProfileContents/EditProfile";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -136,7 +139,10 @@ export default function App() {
   const getNotify = useStore((state) => state.getNotify);
   const setPosts = useStore((state) => state.setPosts);
   const setQuiver = useStore((state) => state.setQuiver);
+  const setHasQuiver = useStore((state) => state.setHasQuiver);
   const getLikes = useStore((state) => state.getLikes);
+  const isUsers = useStore((state) => state.isUsers);
+  const setUserData = useStore((state) => state.setUserData);
 
   const connect = async () => {
     const db = getDatabase();
@@ -186,11 +192,15 @@ export default function App() {
         checkuser();
         getNotify();
         setQuiver();
+        setHasQuiver();
         getLikes();
+        isUsers();
         setPosts();
+        setUserData();
         setTimeout(() => {
           setPosts();
-        }, 2000);
+          // isUsers();
+        }, 3000);
       }
       if (!user) {
         setLog(false);
@@ -285,7 +295,7 @@ export default function App() {
                       },
                       headerTintColor: "#fff",
                       headerTitleStyle: {
-                        fontWeight: "light",
+                        fontWeight: "200",
                       },
                     }}
                   />
@@ -300,7 +310,7 @@ export default function App() {
                       },
                       headerTintColor: "#fff",
                       headerTitleStyle: {
-                        fontWeight: "light",
+                        fontWeight: "200",
                       },
                     }}
                   />
@@ -315,7 +325,40 @@ export default function App() {
                       },
                       headerTintColor: "#fff",
                       headerTitleStyle: {
-                        fontWeight: "light",
+                        fontWeight: "200",
+                      },
+                      headerShown: false,
+                      presentation: "modal",
+                    }}
+                  />
+                  <RootStack.Screen
+                    name="PhotosRender"
+                    component={PhotosRender}
+                    options={{
+                      title: "Post",
+                      headerStyle: {
+                        backgroundColor: colors.sec,
+                      },
+                      headerTintColor: "#fff",
+                      headerTitleStyle: {
+                        fontWeight: "200",
+                      },
+                      headerShown: false,
+                      presentation: "modal",
+                    }}
+                  />
+
+                  <RootStack.Screen
+                    name="EditProfile"
+                    component={EditProfile}
+                    options={{
+                      title: "Post",
+                      headerStyle: {
+                        backgroundColor: colors.sec,
+                      },
+                      headerTintColor: "#fff",
+                      headerTitleStyle: {
+                        fontWeight: "200",
                       },
                       headerShown: false,
                       presentation: "modal",
