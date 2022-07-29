@@ -1,7 +1,12 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import Unboarding from "./pages/Onboarding";
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { KeyboardAvoidingView, useToast } from "native-base";
 import {
   Ionicons,
@@ -9,6 +14,9 @@ import {
   Octicons,
   Foundation,
   AntDesign,
+  EvilIcons,
+  FontAwesome,
+  Entypo,
 } from "@expo/vector-icons";
 import { NavigationContainer } from "@react-navigation/native";
 import { Box, extendTheme, NativeBaseProvider, Spinner } from "native-base";
@@ -49,12 +57,16 @@ import Example from "./AllContain";
 import PostModals from "./screens/PostFolder/PostModal";
 import CommentPage from "./pages/CommentsFolder/Comments";
 import PhotosRender from "./screens/ProfileContents/PhotosRender";
+import BottomComments from "./screens/BottomComments";
 
 import EditProfile from "./screens/ProfileContents/EditProfile";
+import DirectMessage from "./screens/MessagesFolder/DirectMessage";
+import SplashScreen from "./SplashScreen";
+import MessageList from "./screens/MessagesFolder/MessageList";
+import Notify from "./pages/Notify";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
-initializeApp(firebaseConfig);
 
 const newColorTheme = {
   brand: {
@@ -108,18 +120,134 @@ const theme = extendTheme({ colors: newColorTheme });
 
 function ProfileStackScreen() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen
+    <RootStack.Navigator>
+      <RootStack.Screen
         options={{ headerShown: false }}
         name="Profile"
         component={ProfilePage}
       />
-      <Stack.Screen
+      <RootStack.Screen
         options={{ headerShown: false }}
         name="UserProfile"
         component={UserProfile}
       />
-    </Stack.Navigator>
+
+      <RootStack.Screen
+        name="EditProfile"
+        component={EditProfile}
+        options={{
+          title: "Post",
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+    </RootStack.Navigator>
+  );
+}
+
+function MessageScreen() {
+  return (
+    <RootStack.Navigator>
+      <RootStack.Screen
+        options={{ headerShown: false }}
+        name="MessageList"
+        component={MessageList}
+      />
+      <RootStack.Screen
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTitleAlign: "center",
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: true,
+          presentation: "modal",
+        }}
+        name="DirectMessage"
+        component={DirectMessage}
+      />
+    </RootStack.Navigator>
+  );
+}
+
+function PostScreen() {
+  return (
+    <RootStack.Navigator>
+      <RootStack.Screen
+        name="Post"
+        component={HomePage}
+        options={{
+          title: "Post",
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: false,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+      />
+      <RootStack.Screen
+        name="Postpage"
+        component={PostModals}
+        options={{
+          title: "Post",
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+      />
+    </RootStack.Navigator>
+  );
+}
+
+function Notifications() {
+  return (
+    <RootStack.Navigator>
+      <RootStack.Screen
+        name="Notify"
+        component={Notify}
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: false,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+      />
+      <RootStack.Screen
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: false,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+        name="UserProfileN"
+        component={UserProfile}
+      />
+    </RootStack.Navigator>
   );
 }
 
@@ -129,7 +257,7 @@ export default function App() {
     "Raleway-Regular": require("./assets/fonts/static/Raleway-Regular.ttf"),
     "AlmendraSC-Regular": require("./assets/fonts/AlmendraSC-Regular.ttf"),
   });
-  const [log, setLog] = useState(undefined);
+  const [log, setLog] = useState(true);
   const [loading, setloading] = useState(false);
   const [user, setUser] = useState({});
   const toast = useToast();
@@ -142,238 +270,202 @@ export default function App() {
   const setHasQuiver = useStore((state) => state.setHasQuiver);
   const getLikes = useStore((state) => state.getLikes);
   const isUsers = useStore((state) => state.isUsers);
+  const inQuiver = useStore((state) => state.inQuiver);
   const setUserData = useStore((state) => state.setUserData);
+  const openComment = useStore((state) => state.openComment);
+  const setChatList = useStore((state) => state.setChatList);
+  const setLastMessages = useStore((state) => state.setLastMessages);
+  const getNC = useStore((state) => state.getNC);
+  const clearToast = useStore((state) => state.clearToast);
+  const setUnreadMessages = useStore((state) => state.setUnreadMessages);
+  const UnreadMessages = useStore((state) => state.UnreadMessages);
+  const noticeCount = useStore((state) => state.noticeCount);
 
   const connect = async () => {
     const db = getDatabase();
-    var myConnectionsRef = await ref(
-      db,
-      `connection/${getAuth().currentUser.uid}`
-    );
     let on;
-    // stores the timestamp of my last disconnect (the last time I was seen online)
-    var lastOnlineRef = await ref(
-      db,
-      `connection/${getAuth().currentUser.uid}/lastOnline`
-    );
+    onAuthStateChanged(getAuth(app), async (user) => {
+      var myConnectionsRef = await ref(db, `connection/${user.uid}`);
 
-    var connectedRef = await ref(db, ".info/connected");
-    onValue(connectedRef, (snap) => {
-      if (snap.val() === true) {
-        // We're connected (or reconnected)! Do anything here that should happen only if online (or on reconnect)
-        const con = push(myConnectionsRef);
+      // stores the timestamp of my last disconnect (the last time I was seen online)
+      var lastOnlineRef = await ref(db, `connection/${user.uid}/lastOnline`);
 
-        // When I disconnect, remove this device
-        onDisconnect(con).remove();
+      var connectedRef = await ref(db, ".info/connected");
+      onValue(connectedRef, (snap) => {
+        if (snap.val() === true) {
+          // We're connected (or reconnected)! Do anything here that should happen only if online (or on reconnect)
+          const con = push(myConnectionsRef);
 
-        // Add this device to my connections list
-        // this value could contain info about the device or a timestamp too
-        set(con, true);
+          // When I disconnect, remove this device
+          onDisconnect(con).remove();
 
-        // When I disconnect, update the last time I was seen online
-        onDisconnect(lastOnlineRef).set(serverTimestamp());
-        console.log("connected");
+          // Add this device to my connections list
+          // this value could contain info about the device or a timestamp too
+          set(con, true);
 
-        isOnline(true);
-      } else {
-        console.log("not connected");
-        isOnline(false);
-      }
+          // When I disconnect, update the last time I was seen online
+          onDisconnect(lastOnlineRef).set(serverTimestamp());
+          console.log("connected");
+
+          isOnline(true);
+        } else {
+          console.log("not connected");
+          isOnline(false);
+        }
+      });
     });
+
     return on;
   };
 
   useEffect(() => {
+    initializeApp(firebaseConfig);
+    clearToast();
+    connect();
+    setLastMessages();
+    getNotify();
+    setChatList();
+    getNC();
+    setQuiver();
+    setHasQuiver();
+    getLikes();
+    checkuser();
+    isUsers();
+
+    // setPosts();
+    // setUnreadMessages();
+    // if (inQuiver !== [] || inQuiver !== undefined) {
+    // setPosts();
+    // }
+    // setTimeout(() => {
+    //   getNotify();
+    //   setChatList();
+    //   getNC();
+    // }, 15000);
+
+    setPosts();
+    setUnreadMessages();
+
+    setUserData();
     onAuthStateChanged(getAuth(app), (user) => {
+      if (!user) {
+        setLog(false);
+
+        //   setPosts();
+      }
       if (user) {
         setloading(true);
         setLog(true);
-        connect();
-        checkuser();
-        getNotify();
-        setQuiver();
-        setHasQuiver();
-        getLikes();
-        isUsers();
-        setPosts();
-        setUserData();
-        setTimeout(() => {
-          setPosts();
-          // isUsers();
-        }, 3000);
-      }
-      if (!user) {
-        setLog(false);
       }
     });
-  }, []);
-
-  // if (seenSplash.seenSplash == false) {
-  //   return (
-  //     <NativeBaseProvider theme={theme}>
-  // <Box
-  //   w="full"
-  //   flex={1}
-  //   bg="brand.100"
-  //   alignItems="center"
-  //   justifyContent="center"
-  // >
-  //         <NavigationContainer>
-  //           <Stack.Navigator>
-  //             <Stack.Screen
-  //               name="Home"
-  //               component={Unboarding}
-  //               options={{ title: "Welcome" }}
-  //             />
-  //           </Stack.Navigator>
-  //         </NavigationContainer>
-  //       </Box>
-  //     </NativeBaseProvider>
-  //   );
-  // }
-  // if (loading == false) {
-  //   return (
-  //     <NativeBaseProvider theme={theme}>
-  //       <Box
-  //         bg="brand.100"
-  //         flex={1}
-  //         width="100%"
-  //         alignItems={"center"}
-  //         justifyContent={"center"}
-  //       >
-  //         <Text color="brand.700">Loading</Text>
-  //       </Box>
-  //     </NativeBaseProvider>
-  //   );
-  // }
+    return () => {};
+  });
 
   if (log == false) {
     return (
       <NativeBaseProvider theme={theme}>
-        <Login />
+        <SplashScreen />
       </NativeBaseProvider>
     );
   }
 
   return (
     <NativeBaseProvider theme={theme}>
-      <KeyboardAvoidingView position={"relative"} h="full">
-        <Box flex={1} backgroundColor="brand.100">
-          <NavigationContainer>
-            {loading ? (
-              <>
-                <RootStack.Navigator>
-                  <RootStack.Screen
-                    options={{ headerShown: false }}
-                    name="Example"
-                    component={Example}
+      <Box flex={1} backgroundColor="brand.100">
+        <NavigationContainer>
+          <Tab.Navigator
+            screenOptions={() => ({
+              headerShown: false,
+              tabBarHideOnKeyboard: true,
+              tabBarActiveTintColor: `${colors.textColor}`,
+              tabBarInactiveTintColor: colors.disbrand,
+              tabBarStyle: {
+                backgroundColor: colors.primary,
+                border: "none",
+                padding: 1,
+              },
+              tabBarLabelStyle: {
+                fontWeight: "bold",
+              },
+            })}
+          >
+            <Tab.Screen
+              name="Home"
+              component={PostScreen}
+              options={{
+                tabBarLabel: "Home",
+                tabBarIcon: ({ focused, size, color }) => (
+                  <Octicons
+                    name="home"
+                    size={size}
+                    color={focused ? colors.textColor : colors.disbrand}
                   />
+                ),
+              }}
+            />
 
-                  <RootStack.Screen
-                    options={{ headerShown: false }}
-                    name="Callpage"
-                    component={CallPage}
-                    initialParams={{ user: user }}
-                  />
-                  <RootStack.Screen
-                    options={{ headerShown: false }}
-                    name="personalcall"
-                    component={Personal}
-                  />
-                  <RootStack.Screen
-                    options={{ headerShown: false }}
-                    name="brainstorm"
-                    component={BrainstormArena}
-                  />
-                  <RootStack.Screen
-                    name="UserProfile"
-                    component={UserProfile}
-                    options={{
-                      title: "Back",
-                      headerStyle: {
-                        backgroundColor: colors.sec,
-                      },
-                      headerTintColor: "#fff",
-                      headerTitleStyle: {
-                        fontWeight: "200",
-                      },
-                    }}
-                  />
+            {/* <Tab.Screen
+          name="Talks"
+          component={PostPage}
+          options={{
+            tabBarIcon: ({ focused, size }) => (
+              <Foundation
+                name="sound"
+                size={size}
+                color={focused ? colors.textColor : colors.disbrand}
+              />
+            ),
+          }}
+        /> */}
 
-                  <RootStack.Screen
-                    name="Postpage"
-                    component={PostModals}
-                    options={{
-                      title: "Post",
-                      headerStyle: {
-                        backgroundColor: colors.sec,
-                      },
-                      headerTintColor: "#fff",
-                      headerTitleStyle: {
-                        fontWeight: "200",
-                      },
-                    }}
+            <Tab.Screen
+              name="Messages"
+              component={MessageScreen}
+              options={{
+                tabBarIcon: ({ focused, size }) => (
+                  <Entypo
+                    name="new-message"
+                    size={24}
+                    color={focused ? colors.textColor : colors.disbrand}
                   />
+                ),
+                tabBarBadge:
+                  UnreadMessages.length !== 0 ? UnreadMessages.length : null,
+              }}
+            />
+            <Tab.Screen
+              name="Notify"
+              component={Notifications}
+              options={{
+                tabBarIcon: ({ focused, size }) => (
+                  <Ionicons
+                    name="md-notifications-outline"
+                    size={size}
+                    color={focused ? colors.textColor : colors.disbrand}
+                  />
+                ),
+                tabBarBadge: noticeCount || null,
+                headerShown: false,
+              }}
+            />
+            <Tab.Screen
+              name="Profile"
+              component={ProfileStackScreen}
+              options={{
+                tabBarIcon: ({ focused, size }) => (
+                  <Ionicons
+                    name="person-outline"
+                    size={size}
+                    color={focused ? colors.textColor : colors.disbrand}
+                  />
+                ),
+              }}
+            />
+          </Tab.Navigator>
 
-                  <RootStack.Screen
-                    name="Comments"
-                    component={CommentPage}
-                    options={{
-                      title: "Post",
-                      headerStyle: {
-                        backgroundColor: colors.sec,
-                      },
-                      headerTintColor: "#fff",
-                      headerTitleStyle: {
-                        fontWeight: "200",
-                      },
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
-                  <RootStack.Screen
-                    name="PhotosRender"
-                    component={PhotosRender}
-                    options={{
-                      title: "Post",
-                      headerStyle: {
-                        backgroundColor: colors.sec,
-                      },
-                      headerTintColor: "#fff",
-                      headerTitleStyle: {
-                        fontWeight: "200",
-                      },
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
-
-                  <RootStack.Screen
-                    name="EditProfile"
-                    component={EditProfile}
-                    options={{
-                      title: "Post",
-                      headerStyle: {
-                        backgroundColor: colors.sec,
-                      },
-                      headerTintColor: "#fff",
-                      headerTitleStyle: {
-                        fontWeight: "200",
-                      },
-                      headerShown: false,
-                      presentation: "modal",
-                    }}
-                  />
-                </RootStack.Navigator>
-
-                <Box safeAreaBottom />
-              </>
-            ) : (
-              <Loading />
-            )}
-          </NavigationContainer>
-        </Box>
-      </KeyboardAvoidingView>
+          <Box safeAreaBottom />
+        </NavigationContainer>
+      </Box>
     </NativeBaseProvider>
   );
 }

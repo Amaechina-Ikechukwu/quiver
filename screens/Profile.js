@@ -48,6 +48,7 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import IconPress from "../constants/IconPress";
 import PhotoBottomSheet from "./ProfileContents/BottomSheetRender";
 import ProfileMenu from "./ProfileContents/ProfileMenu";
+import UploadAlert from "../constants/UploadAlert";
 
 function ProfilePage({ route }) {
   const userData = useStore((state) => state.userData);
@@ -55,6 +56,7 @@ function ProfilePage({ route }) {
   const inQuiver = useStore((state) => state.inQuiver);
   const inHasQuiver = useStore((state) => state.inHasQuiver);
   const user = useStore((state) => state.user);
+  const users = useStore((state) => state.users);
 
   const window = Dimensions.get("window");
   const screen = Dimensions.get("screen");
@@ -63,7 +65,7 @@ function ProfilePage({ route }) {
 
   const [item, setItem] = useState();
   const [close, setClose] = useState(true);
-  const [meUser, setmeUser] = useState(true);
+  const [meUser, setmeUser] = useState();
 
   const [post, setPost] = useState(
     userData.sort((x, y) => {
@@ -88,14 +90,14 @@ function ProfilePage({ route }) {
     // for (var i = 0; i < userData.length; i++) {
     //   console.log(userData[i]);
     // }
-    setmeUser(auth);
+
     setPost(
       userData.sort((x, y) => {
         return y.info.time - x.info.time;
       })
     );
     return () => {};
-  });
+  }, [user, auth, users]);
 
   const navigation = useNavigation();
 
@@ -103,6 +105,7 @@ function ProfilePage({ route }) {
     return (
       <Box flex={1} bg="brand.100">
         <Box safeAreaTop />
+        <UploadAlert />
         <VStack space={3}>
           <Box bg="brand.400" p={3}>
             <Box flexDirection={"row"}>
@@ -117,11 +120,11 @@ function ProfilePage({ route }) {
                     <Avatar
                       size="xl"
                       source={{
-                        uri: meUser.photoURL || quiver,
+                        uri: auth.photoURL || quiver,
                       }}
                     />
                     <VStack p={1} justifyContent={"center"}>
-                      <CText text={meUser.displayName} />
+                      <CText text={auth.displayName} />
                       <HStack
                         alignItems="center"
                         justifyContent={"space-evenly"}
@@ -170,7 +173,7 @@ function ProfilePage({ route }) {
               </Box> */}
             </Box>
           </Box>
-          <Box bg="brand.400" p={2}>
+          {/* <Box bg="brand.400" p={2}>
             <CText style={{ opacity: 0.4 }} text={"Moments"} size="sm" />
             <Box p={2}>
               <FlatList
@@ -184,10 +187,10 @@ function ProfilePage({ route }) {
                 ListEmptyComponent={post == "" ? null : <Loading />}
               />
             </Box>
-          </Box>
+          </Box> */}
           <Box bg="brand.400" h="auto" p={2}>
             <CText style={{ opacity: 0.4 }} text={"Post"} size="sm" />
-            <Box w="full" alignItems={"center"} p={2}>
+            <Box w="full" alignItems={"center"}>
               <FlatList
                 data={post}
                 extradata={userData}

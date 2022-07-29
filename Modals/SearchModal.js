@@ -45,6 +45,7 @@ function SearchModal(props) {
   };
   const users = useStore((state) => state.users);
   const setSearchedUserData = useStore((state) => state.setSearchedUserData);
+  const setSearchedUserPost = useStore((state) => state.setSearchedUserPost);
   const quiver = useStore((state) => state.quiver);
   const setWhoseCliques = useStore((state) => state.setWhoseCliques);
   const sethasCliques = useStore((state) => state.sethasCliques);
@@ -98,6 +99,7 @@ function SearchModal(props) {
     setWhoseCliques(item.id);
     sethasCliques(item.id);
     setSearchedUserData(item.id);
+    setSearchedUserPost(item.id);
     navigation.navigate("UserProfile", {
       itemID: item.id,
       itemS: item.info,

@@ -58,6 +58,7 @@ function Login({ navigation }) {
     }).start();
   };
 
+  const toasted = useStore((state) => state.toasted);
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId:
       "694344473866-soltk0t5sdhfl2tg42dhe9p2o61ja2vc.apps.googleusercontent.com",
@@ -83,7 +84,7 @@ function Login({ navigation }) {
       const provider = new GoogleAuthProvider();
 
       // const credential = provider.credential(id_token);
-      signInWithCredential(auth, GoogleAuthProvider.credential(id_token))
+      signInWithPopup(auth, GoogleAuthProvider.credential(id_token))
         .then((result) => {
           const val = result.user;
           const db = getDatabase();
@@ -92,10 +93,16 @@ function Login({ navigation }) {
             displayName: val.displayName,
             photoURL: val.photoURL,
           });
-          set(ref(db, "inQuiver/" + val.uid), { id: val.uid });
+          const rad = Math.random().toString(36).substring(2, 17);
+          // const reff = ref(db, "inQuiver/" + val.uid + `/${rad}`);
+          // const toPush = push(reff);
+          set(ref(db, "inQuiver/" + "/currentUser"), {
+            currentUser: `${val.uid}`,
+            followedBy: `${val.uid}`,
+          });
           setText("Loading");
           console.log("updated");
-          // toasted("profile set");
+          toasted("profile set");
           navigation.navigate("Example");
         })
         .catch((err) => {

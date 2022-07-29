@@ -7,6 +7,7 @@ import {
   Octicons,
   Foundation,
   AntDesign,
+  Entypo,
 } from "@expo/vector-icons";
 
 import { Box, extendTheme, NativeBaseProvider, Spinner } from "native-base";
@@ -37,6 +38,9 @@ import {
 import UserProfile from "./pages/UserProfile/Userprofile";
 import Notify from "./pages/Notify";
 import PostPage from "./screens/PostFolder/Postpage";
+import BottomComments from "./screens/BottomComments";
+import MessageList from "./screens/MessagesFolder/MessageList";
+import SplashScreen from "./SplashScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -44,107 +48,167 @@ function Example({ navigation }) {
   const getNotify = useStore((state) => state.getNotify);
   const getNC = useStore((state) => state.getNC);
   const noticeCount = useStore((state) => state.noticeCount);
-
+  const setQuiver = useStore((state) => state.setQuiver);
   const setPosts = useStore((state) => state.setPosts);
   const setCliques = useStore((state) => state.setCliques);
+  const openComment = useStore((state) => state.openComment);
+  const directMessages = useStore((state) => state.directMessages);
+  const posts = useStore((state) => state.posts);
+  const UnreadMessages = useStore((state) => state.UnreadMessages);
+  const setUnreadMessages = useStore((state) => state.setUnreadMessages);
 
   useEffect(() => {
-    getNotify();
-    getNC();
-
+    // getNotify();
+    // getNC();
+    // setPosts();
+    console.log(UnreadMessages.length, "all contains");
+    setQuiver();
+    // navigation.addListener("focus", () => {
+    //   setPosts();
+    //   setUnreadMessages();
+    // });
     // setPosts();
     // setTimeout(() => {
-    //   setPosts();
-    // }, 2000);
+    //   setUnreadMessages();
+    // }, 5000);
   });
   return (
-    <Box flex={1}>
-      <Tab.Navigator
-        screenOptions={() => ({
-          headerShown: false,
-          tabBarHideOnKeyboard: true,
-          tabBarActiveTintColor: `${colors.textColor}`,
-          tabBarInactiveTintColor: colors.disbrand,
-          tabBarStyle: {
-            backgroundColor: colors.primary,
-            border: "none",
-            padding: 1,
-          },
-          tabBarLabelStyle: {
-            fontWeight: "bold",
-          },
-        })}
-      >
-        <Tab.Screen
-          name="Home"
-          component={HomePage}
-          options={{
-            tabBarLabel: "Home",
-            tabBarIcon: ({ focused, size, color }) => (
-              <Octicons
-                name="home"
-                size={size}
-                color={focused ? colors.textColor : colors.disbrand}
-              />
-            ),
-          }}
-        />
-
-        {/* <Tab.Screen
-          name="Talks"
-          component={PostPage}
-          options={{
-            tabBarIcon: ({ focused, size }) => (
-              <Foundation
-                name="sound"
-                size={size}
-                color={focused ? colors.textColor : colors.disbrand}
-              />
-            ),
-          }}
-        /> */}
-
-        <Tab.Screen
-          name="Call"
-          component={CallPage}
-          options={{
-            tabBarIcon: ({ focused, size }) => (
-              <Ionicons
-                name="call-outline"
-                size={size}
-                color={focused ? colors.textColor : colors.disbrand}
-              />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Notify"
-          component={Notify}
-          options={{
-            tabBarIcon: ({ focused, size }) => (
-              <Ionicons
-                name="md-notifications-outline"
-                size={size}
-                color={focused ? colors.textColor : colors.disbrand}
-              />
-            ),
-            tabBarBadge: noticeCount || null,
-          }}
-        />
-        <Tab.Screen
-          name="Profile"
-          component={ProfilePage}
-          options={{
-            tabBarIcon: ({ focused, size }) => (
-              <Ionicons
-                name="person-outline"
-                size={size}
-                color={focused ? colors.textColor : colors.disbrand}
-              />
-            ),
-          }}
-        />
-      </Tab.Navigator>
+    <Box flex={1} bg="brand.100">
+      <RootStack.Navigator>
+        {loading ? (
+          <>
+            <RootStack.Screen
+              options={{ headerShown: false }}
+              name="Example"
+              component={Example}
+            />
+            <RootStack.Screen
+              options={{ headerShown: false }}
+              name="Callpage"
+              component={CallPage}
+              initialParams={{ user: user }}
+            />
+            <RootStack.Screen
+              options={{ headerShown: false }}
+              name="personalcall"
+              component={Personal}
+            />
+            <RootStack.Screen
+              options={{ headerShown: false }}
+              name="brainstorm"
+              component={BrainstormArena}
+            />
+            <RootStack.Screen
+              name="UserProfile"
+              component={UserProfile}
+              options={{
+                title: "Back",
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+              }}
+            />
+            <RootStack.Screen
+              name="Postpage"
+              component={PostModals}
+              options={{
+                title: "Post",
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+              }}
+            />
+            <RootStack.Screen
+              name="Comments"
+              component={CommentPage}
+              options={{
+                title: "Post",
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+                headerShown: false,
+                presentation: "modal",
+              }}
+            />
+            <RootStack.Screen
+              name="PhotosRender"
+              component={PhotosRender}
+              options={{
+                title: "Post",
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+                headerShown: false,
+                presentation: "modal",
+              }}
+            />
+            <RootStack.Screen
+              name="EditProfile"
+              component={EditProfile}
+              options={{
+                title: "Post",
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+                headerShown: false,
+                presentation: "modal",
+              }}
+            />
+            <RootStack.Screen
+              name="DirectMessage"
+              component={DirectMessage}
+              options={{
+                headerStyle: {
+                  backgroundColor: colors.sec,
+                },
+                headerTitleAlign: "center",
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                  fontWeight: "200",
+                },
+                headerShown: true,
+                presentation: "modal",
+              }}
+            />
+          </>
+        ) : (
+          <RootStack.Screen
+            name="Loading"
+            component={Loading}
+            options={{
+              headerStyle: {
+                backgroundColor: colors.sec,
+              },
+              headerTintColor: "#fff",
+              headerTitleStyle: {
+                fontWeight: "200",
+              },
+              headerShown: false,
+              presentation: "modal",
+            }}
+          />
+        )}
+      </RootStack.Navigator>
     </Box>
   );
 }
