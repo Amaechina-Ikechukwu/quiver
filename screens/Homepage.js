@@ -58,11 +58,7 @@ function HomePage({ navigation }) {
   //   const inQuiver = useStore((state) => state.inQuiver);
   //   const likes = useStore((state) => state.likes);
   //   setPosts();
-  useEffect(() => {
-    setTimeout(() => {
-      clearToast();
-    }, 3000);
-  });
+  useEffect(() => {});
 
   //   const likePost = (postId, from) => {
   //     const db = getDatabase();
@@ -78,7 +74,7 @@ function HomePage({ navigation }) {
   //     remove(ref(db, `posts/` + postId + "/likes/" + from)).then(() => setPost());
   //   };
 
-  return <PostPage />;
+  return <PostPage posting={posts} />;
 }
 
 export default HomePage;

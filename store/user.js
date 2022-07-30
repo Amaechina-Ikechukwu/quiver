@@ -59,7 +59,7 @@ const gethasCliques = () => {
   const dbRef = getDatabase();
   onAuthStateChanged(getAuth(app), (user) => {
     if (user) {
-      const reff = ref(dbRef, `inQuiver/${user.uid}`); //retrieve posts
+      const reff = ref(dbRef, `inQuiver/`); //retrieve posts
       const ordered = query(reff); //orders by time
       onChildAdded(reff, async (snapshot) => {
         const vuid = snapshot.key;
@@ -77,7 +77,14 @@ const gethasCliques = () => {
             }
           }
         };
-        check.push({ id: snapshot.val(), name: getName(), photo: getPhoto() });
+        if (snapshot.val().followedBy == user.uid) {
+          check.push({
+            id: snapshot.val(),
+            name: getName(),
+            photo: getPhoto(),
+          });
+        }
+
         // console.log(snapshot.val(), "clique val");
       });
     }
@@ -93,7 +100,7 @@ const whichCliques = (id) => {
   const reff = ref(dbRef, `inQuiver`); //retrieve posts
   const ordered = query(reff); //orders by time
   onChildAdded(ordered, async (snapshot) => {
-    if (snapshot.key == id) {
+    if (snapshot.val().followedBy == id) {
       check.push({ id: snapshot.val() });
       // console.log(snapshot.val(), "clique val");
     }
@@ -106,10 +113,11 @@ const hasCliques = (id) => {
   let data;
   let check = [];
   const dbRef = getDatabase();
-  const reff = ref(dbRef, `inQuiver/${id}`); //retrieve posts
+  const reff = ref(dbRef, `inQuiver/`); //retrieve posts
   const ordered = query(reff); //orders by time
   onChildAdded(ordered, async (snapshot) => {
-    check.push({ id: snapshot.val() });
+    if (snapshot.val().currentUser == id)
+      check.push({ id: snapshot.val().followedBy });
     // console.log(snapshot.val(), "clique val");
   });
 
@@ -159,11 +167,47 @@ const getNotice = () => {
 
   return data;
 };
+const getCliques = () => {
+  getUsers();
+  let data;
+  let check = [];
+  const users = getUsers();
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `inQuiver/`); //retrieve posts
+  const ordered = query(reff); //orders by time
+  onChildAdded(reff, async (snapshot) => {
+    const vuid = snapshot;
+    if (snapshot.val().currentUser == getAuth().currentUser.uid) {
+      const getPhoto = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == snapshot.val().followedBy) {
+            return users[i].info.photoURL;
+          }
+        }
+      };
+      const getName = () => {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id == snapshot.val().followedBy) {
+            return users[i].info.displayName;
+          }
+        }
+      };
 
+      check.push({
+        id: snapshot.val().followedBy,
+        name: getName(),
+
+        photo: getPhoto(),
+      });
+    }
+    // console.log(snapshot.val(), "clique val");
+  });
+
+  return check;
+};
 // getCliques();
 // MeAsAUser();
 const getAutoPosts = () => {
-  getCliques();
   let data = [];
   let check = [];
   let filtered = [];
@@ -270,44 +314,7 @@ const getAutoPosts = () => {
 
   return check;
 };
-const getCliques = () => {
-  getUsers();
-  let data;
-  let check = [];
-  const users = getUsers();
-  const dbRef = getDatabase();
-  const reff = ref(dbRef, `inQuiver/`); //retrieve posts
-  const ordered = query(reff); //orders by time
-  onChildAdded(reff, async (snapshot) => {
-    const vuid = snapshot;
-    if (snapshot.val().currentUser == getAuth().currentUser.uid) {
-      const getPhoto = () => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == snapshot.val().followedBy) {
-            return users[i].info.photoURL;
-          }
-        }
-      };
-      const getName = () => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == snapshot.val().followedBy) {
-            return users[i].info.displayName;
-          }
-        }
-      };
 
-      check.push({
-        id: snapshot.val().followedBy,
-        name: getName(),
-
-        photo: getPhoto(),
-      });
-    }
-    // console.log(snapshot.val(), "clique val");
-  });
-
-  return check;
-};
 const currentUserPost = () => {
   let data = [];
   let check = [];
@@ -724,7 +731,7 @@ const getDirectMessage = (uid) => {
   const users = getUsers();
 
   console.log(Qid);
-  const reff = ref(dbRef, `messages/${uid}/${getAuth().currentUser.uid}`); //retrieve posts
+  const reff = ref(dbRef, `messages/${getAuth().currentUser.uid}/${uid}`); //retrieve posts
   const ordered = query(reff, orderByChild("time"), limitToLast(20)); //orders by time
   onChildAdded(ordered, async (snapshot) => {
     // const val = await snapshot.val();
@@ -986,7 +993,10 @@ const getTotalUnread = (uid) => {
           // snapshot.forEach((key) => {
 
           for (const key in snapshot.val()) {
-            if (snapshot.val()[key].isRead == false) {
+            if (
+              snapshot.val()[key].isRead == false &&
+              snapshot.val()[key].by !== user.uid
+            ) {
               check.push(key);
             }
           }

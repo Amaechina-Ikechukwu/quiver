@@ -136,7 +136,7 @@ function ProfilePage({ route }) {
                             style={{ opacity: 0.4 }}
                           />
                           <CText
-                            text={inHasQuiver.length || 0}
+                            text={inQuiver.length || 0}
                             size="lg"
                             style={{ opacity: 0.9, fontWeight: "bold" }}
                           />
@@ -153,7 +153,7 @@ function ProfilePage({ route }) {
                             style={{ opacity: 0.4 }}
                           />
                           <CText
-                            text={inQuiver.length || 0}
+                            text={inHasQuiver.length || 0}
                             size="lg"
                             style={{ opacity: 0.9, fontWeight: "bold" }}
                           />

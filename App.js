@@ -64,6 +64,7 @@ import DirectMessage from "./screens/MessagesFolder/DirectMessage";
 import SplashScreen from "./SplashScreen";
 import MessageList from "./screens/MessagesFolder/MessageList";
 import Notify from "./pages/Notify";
+import PostPage from "./screens/PostFolder/Postpage";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -127,7 +128,7 @@ function ProfileStackScreen() {
         component={ProfilePage}
       />
       <RootStack.Screen
-        options={{ headerShown: false }}
+        options={{ headerShown: true }}
         name="UserProfile"
         component={UserProfile}
       />
@@ -182,9 +183,9 @@ function MessageScreen() {
 
 function PostScreen() {
   return (
-    <RootStack.Navigator>
-      <RootStack.Screen
-        name="Post"
+    <Stack.Navigator>
+      {/* <Stack.Screen
+        name="Home"
         component={HomePage}
         options={{
           title: "Post",
@@ -197,8 +198,24 @@ function PostScreen() {
             fontWeight: "200",
           },
         }}
+      /> */}
+      <Stack.Screen
+        name="PostPage"
+        component={PostPage}
+        options={{
+          title: "Post",
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: false,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
       />
-      <RootStack.Screen
+
+      <Stack.Screen
         name="Postpage"
         component={PostModals}
         options={{
@@ -212,7 +229,21 @@ function PostScreen() {
           },
         }}
       />
-    </RootStack.Navigator>
+      <Stack.Screen
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: true,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+        name="UserProfile"
+        component={UserProfile}
+      />
+    </Stack.Navigator>
   );
 }
 
@@ -260,6 +291,8 @@ export default function App() {
   const [log, setLog] = useState(true);
   const [loading, setloading] = useState(false);
   const [user, setUser] = useState({});
+  const [NotificationCount, setNotificationCount] = useState(0);
+  const [UnreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const toast = useToast();
   const checkuser = useStore((state) => state.checkuser);
   const toastt = useStore((state) => state.toast);
@@ -317,7 +350,25 @@ export default function App() {
 
     return on;
   };
+  const CallAllFunctions = () => {
+    clearToast();
+    connect();
+    setLastMessages();
+    getNotify();
+    setChatList();
+    getNC();
 
+    setHasQuiver();
+    getLikes();
+    checkuser();
+    isUsers();
+
+    setTimeout(() => {
+      setUnreadMessages();
+      setNotificationCount(noticeCount);
+      setUnreadMessagesCount(UnreadMessages.length);
+    }, 5000);
+  };
   useEffect(() => {
     initializeApp(firebaseConfig);
     clearToast();
@@ -332,34 +383,31 @@ export default function App() {
     checkuser();
     isUsers();
 
-    // setPosts();
-    // setUnreadMessages();
-    // if (inQuiver !== [] || inQuiver !== undefined) {
-    // setPosts();
-    // }
-    // setTimeout(() => {
-    //   getNotify();
-    //   setChatList();
-    //   getNC();
-    // }, 15000);
-
-    setPosts();
-    setUnreadMessages();
-
-    setUserData();
     onAuthStateChanged(getAuth(app), (user) => {
       if (!user) {
         setLog(false);
-
-        //   setPosts();
-      }
-      if (user) {
+      } else {
+        console.log("inQuiver", inQuiver);
         setloading(true);
         setLog(true);
+        setTimeout(() => {
+          setUnreadMessages();
+          setNotificationCount(noticeCount);
+          setUnreadMessagesCount(UnreadMessages.length);
+          setUserData();
+          setPosts();
+          console.log(
+            "notification",
+            NotificationCount,
+            "---",
+            "Unread",
+            UnreadMessages.length
+          );
+        }, 5000);
       }
     });
     return () => {};
-  });
+  }, []);
 
   if (log == false) {
     return (
@@ -389,22 +437,23 @@ export default function App() {
               },
             })}
           >
-            <Tab.Screen
-              name="Home"
-              component={PostScreen}
-              options={{
-                tabBarLabel: "Home",
-                tabBarIcon: ({ focused, size, color }) => (
-                  <Octicons
-                    name="home"
-                    size={size}
-                    color={focused ? colors.textColor : colors.disbrand}
-                  />
-                ),
-              }}
-            />
+            <Tab.Group>
+              <Tab.Screen
+                name="Home"
+                component={PostScreen}
+                options={{
+                  tabBarLabel: "Home",
+                  tabBarIcon: ({ focused, size, color }) => (
+                    <Octicons
+                      name="home"
+                      size={size}
+                      color={focused ? colors.textColor : colors.disbrand}
+                    />
+                  ),
+                }}
+              />
 
-            {/* <Tab.Screen
+              {/* <Tab.Screen
           name="Talks"
           component={PostPage}
           options={{
@@ -418,49 +467,50 @@ export default function App() {
           }}
         /> */}
 
-            <Tab.Screen
-              name="Messages"
-              component={MessageScreen}
-              options={{
-                tabBarIcon: ({ focused, size }) => (
-                  <Entypo
-                    name="new-message"
-                    size={24}
-                    color={focused ? colors.textColor : colors.disbrand}
-                  />
-                ),
-                tabBarBadge:
-                  UnreadMessages.length !== 0 ? UnreadMessages.length : null,
-              }}
-            />
-            <Tab.Screen
-              name="Notify"
-              component={Notifications}
-              options={{
-                tabBarIcon: ({ focused, size }) => (
-                  <Ionicons
-                    name="md-notifications-outline"
-                    size={size}
-                    color={focused ? colors.textColor : colors.disbrand}
-                  />
-                ),
-                tabBarBadge: noticeCount || null,
-                headerShown: false,
-              }}
-            />
-            <Tab.Screen
-              name="Profile"
-              component={ProfileStackScreen}
-              options={{
-                tabBarIcon: ({ focused, size }) => (
-                  <Ionicons
-                    name="person-outline"
-                    size={size}
-                    color={focused ? colors.textColor : colors.disbrand}
-                  />
-                ),
-              }}
-            />
+              <Tab.Screen
+                name="Messages"
+                component={MessageScreen}
+                options={{
+                  tabBarIcon: ({ focused, size }) => (
+                    <Entypo
+                      name="new-message"
+                      size={24}
+                      color={focused ? colors.textColor : colors.disbrand}
+                    />
+                  ),
+                  tabBarBadge:
+                    UnreadMessages.length !== 0 ? UnreadMessagesCount : null,
+                }}
+              />
+              <Tab.Screen
+                name="Notify"
+                component={Notifications}
+                options={{
+                  tabBarIcon: ({ focused, size }) => (
+                    <Ionicons
+                      name="md-notifications-outline"
+                      size={size}
+                      color={focused ? colors.textColor : colors.disbrand}
+                    />
+                  ),
+                  tabBarBadge: NotificationCount || null,
+                  headerShown: false,
+                }}
+              />
+              <Tab.Screen
+                name="Profile"
+                component={ProfileStackScreen}
+                options={{
+                  tabBarIcon: ({ focused, size }) => (
+                    <Ionicons
+                      name="person-outline"
+                      size={size}
+                      color={focused ? colors.textColor : colors.disbrand}
+                    />
+                  ),
+                }}
+              />
+            </Tab.Group>
           </Tab.Navigator>
 
           <Box safeAreaBottom />
