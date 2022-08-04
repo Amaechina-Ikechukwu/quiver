@@ -101,7 +101,7 @@ function Login({ navigation }) {
             followedBy: `${val.uid}`,
           });
           setText("Loading");
-          console.log("updated");
+          ("updated");
           toasted("profile set");
           navigation.navigate("Example");
         })

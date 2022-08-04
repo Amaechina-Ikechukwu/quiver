@@ -2,7 +2,7 @@
 
 // const useLoggedIn = create((set, get) => ({
 //   loggedin: Boolean,
-//   hasloggedin: () => (state) => ({ loggedin: true }, console.log("ran ")),
-//   hasloggedout: () => (state) => ({ loggedin: false }, console.log("ranoff ")),
+//   hasloggedin: () => (state) => ({ loggedin: true },  ("ran ")),
+//   hasloggedout: () => (state) => ({ loggedin: false },  ("ranoff ")),
 // }));
 // export default useLoggedIn;

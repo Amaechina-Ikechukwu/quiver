@@ -51,6 +51,7 @@ import {
   serverTimestamp,
   get,
   child,
+  update,
 } from "firebase/database";
 import UserProfile from "./pages/UserProfile/Userprofile";
 import Example from "./AllContain";
@@ -65,6 +66,7 @@ import SplashScreen from "./SplashScreen";
 import MessageList from "./screens/MessagesFolder/MessageList";
 import Notify from "./pages/Notify";
 import PostPage from "./screens/PostFolder/Postpage";
+import PhotoComments from "./screens/ProfileContents/SinglePost";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -124,11 +126,11 @@ function ProfileStackScreen() {
     <RootStack.Navigator>
       <RootStack.Screen
         options={{ headerShown: false }}
-        name="Profile"
+        name="ProfilePage"
         component={ProfilePage}
       />
       <RootStack.Screen
-        options={{ headerShown: true }}
+        options={{ headerShown: true, headerTitleAlign: "center" }}
         name="UserProfile"
         component={UserProfile}
       />
@@ -138,6 +140,36 @@ function ProfileStackScreen() {
         component={EditProfile}
         options={{
           title: "Post",
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <RootStack.Screen
+        name="PhotosRender"
+        component={PhotosRender}
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <RootStack.Screen
+        name="PhotoComments"
+        component={PhotoComments}
+        options={{
           headerStyle: {
             backgroundColor: colors.sec,
           },
@@ -216,6 +248,21 @@ function PostScreen() {
       />
 
       <Stack.Screen
+        name="Comments"
+        component={CommentPage}
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerShown: false,
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+        }}
+      />
+
+      <Stack.Screen
         name="Postpage"
         component={PostModals}
         options={{
@@ -242,6 +289,36 @@ function PostScreen() {
         }}
         name="UserProfile"
         component={UserProfile}
+      />
+      <RootStack.Screen
+        name="PhotosRender"
+        component={PhotosRender}
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <RootStack.Screen
+        name="PhotoComments"
+        component={PhotoComments}
+        options={{
+          headerStyle: {
+            backgroundColor: colors.sec,
+          },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "200",
+          },
+          headerShown: false,
+          presentation: "modal",
+        }}
       />
     </Stack.Navigator>
   );
@@ -296,7 +373,7 @@ export default function App() {
   const toast = useToast();
   const checkuser = useStore((state) => state.checkuser);
   const toastt = useStore((state) => state.toast);
-  console.log(toastt);
+
   const getNotify = useStore((state) => state.getNotify);
   const setPosts = useStore((state) => state.setPosts);
   const setQuiver = useStore((state) => state.setQuiver);
@@ -305,7 +382,7 @@ export default function App() {
   const isUsers = useStore((state) => state.isUsers);
   const inQuiver = useStore((state) => state.inQuiver);
   const setUserData = useStore((state) => state.setUserData);
-  const openComment = useStore((state) => state.openComment);
+  const notify = useStore((state) => state.notify);
   const setChatList = useStore((state) => state.setChatList);
   const setLastMessages = useStore((state) => state.setLastMessages);
   const getNC = useStore((state) => state.getNC);
@@ -338,11 +415,12 @@ export default function App() {
 
           // When I disconnect, update the last time I was seen online
           onDisconnect(lastOnlineRef).set(serverTimestamp());
-          console.log("connected");
-
+          ("connected");
+          setOn(user.uid);
           isOnline(true);
         } else {
-          console.log("not connected");
+          ("not connected");
+          setOff(user.uid);
           isOnline(false);
         }
       });
@@ -350,6 +428,21 @@ export default function App() {
 
     return on;
   };
+
+  const setOn = (uid) => {
+    const db = getDatabase();
+    set(ref(db, "userConnection/" + uid), {
+      connected: true,
+    });
+  };
+
+  const setOff = (uid) => {
+    const db = getDatabase();
+    set(ref(db, "userConnection/" + uid), {
+      connected: false,
+    });
+  };
+
   const CallAllFunctions = () => {
     clearToast();
     connect();
@@ -374,40 +467,51 @@ export default function App() {
     clearToast();
     connect();
     setLastMessages();
-    getNotify();
+
     setChatList();
-    getNC();
-    setQuiver();
-    setHasQuiver();
+
     getLikes();
     checkuser();
     isUsers();
-
+    setUnreadMessages();
+    setPosts();
     onAuthStateChanged(getAuth(app), (user) => {
       if (!user) {
         setLog(false);
+        setloading(true);
       } else {
-        console.log("inQuiver", inQuiver);
+        "inQuiver", inQuiver;
         setloading(true);
         setLog(true);
+        setQuiver();
+        getNC();
+        getNotify();
         setTimeout(() => {
-          setUnreadMessages();
+          getNC();
+          getNotify();
           setNotificationCount(noticeCount);
           setUnreadMessagesCount(UnreadMessages.length);
           setUserData();
-          setPosts();
-          console.log(
-            "notification",
+          setHasQuiver();
+
+          "notification",
             NotificationCount,
             "---",
             "Unread",
-            UnreadMessages.length
-          );
+            UnreadMessages.length;
         }, 5000);
       }
     });
     return () => {};
   }, []);
+
+  if (loading == false) {
+    return (
+      <NativeBaseProvider theme={theme}>
+        <Loading />
+      </NativeBaseProvider>
+    );
+  }
 
   if (log == false) {
     return (
@@ -479,11 +583,11 @@ export default function App() {
                     />
                   ),
                   tabBarBadge:
-                    UnreadMessages.length !== 0 ? UnreadMessagesCount : null,
+                    UnreadMessagesCount == 0 ? null : UnreadMessagesCount,
                 }}
               />
               <Tab.Screen
-                name="Notify"
+                name="Notifications"
                 component={Notifications}
                 options={{
                   tabBarIcon: ({ focused, size }) => (
@@ -493,7 +597,7 @@ export default function App() {
                       color={focused ? colors.textColor : colors.disbrand}
                     />
                   ),
-                  tabBarBadge: NotificationCount || null,
+                  tabBarBadge: noticeCount == 0 ? null : noticeCount,
                   headerShown: false,
                 }}
               />
@@ -512,9 +616,9 @@ export default function App() {
               />
             </Tab.Group>
           </Tab.Navigator>
-
-          <Box safeAreaBottom />
         </NavigationContainer>
+
+        <Box safeAreaBottom />
       </Box>
     </NativeBaseProvider>
   );

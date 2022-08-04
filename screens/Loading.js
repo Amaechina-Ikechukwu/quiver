@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 function Loading() {
   return (
     <Box
-      bg="brand.100"
+      bg="brand.200"
       flex={1}
       alignItems={"center"}
       justifyContent={"center"}

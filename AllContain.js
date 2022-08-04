@@ -61,7 +61,7 @@
 //     // getNotify();
 //     // getNC();
 //     // setPosts();
-//     console.log(UnreadMessages.length, "all contains");
+//      (UnreadMessages.length, "all contains");
 //     setQuiver();
 //     // navigation.addListener("focus", () => {
 //     //   setPosts();

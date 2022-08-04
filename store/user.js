@@ -21,21 +21,6 @@ import {
 } from "firebase/database";
 import { app } from "../Firebase";
 
-const getUsers = () => {
-  let data;
-  let check = [];
-  const dbRef = getDatabase();
-  const reff = ref(dbRef, `users`);
-
-  onChildAdded(reff, async (snapshot) => {
-    const val = snapshot.val();
-
-    check.push({ id: snapshot.key, info: val });
-  });
-
-  return check;
-};
-
 const getSpecifyUser = (uid) => {
   let data;
   let check = [];
@@ -53,47 +38,50 @@ const getSpecifyUser = (uid) => {
 };
 
 const gethasCliques = () => {
+  //getFollowing
   let data;
   let check = [];
   const users = getUsers();
   const dbRef = getDatabase();
-  onAuthStateChanged(getAuth(app), (user) => {
-    if (user) {
-      const reff = ref(dbRef, `inQuiver/`); //retrieve posts
-      const ordered = query(reff); //orders by time
-      onChildAdded(reff, async (snapshot) => {
-        const vuid = snapshot.key;
-        const getPhoto = () => {
-          for (var i = 0; i < users.length; i++) {
-            if (users[i].id == vuid) {
-              return users[i].info.photoURL;
-            }
-          }
-        };
-        const getName = () => {
-          for (var i = 0; i < users.length; i++) {
-            if (users[i].id == vuid) {
-              return users[i].info.displayName;
-            }
-          }
-        };
-        if (snapshot.val().followedBy == user.uid) {
-          check.push({
-            id: snapshot.val(),
-            name: getName(),
-            photo: getPhoto(),
-          });
-        }
 
-        // console.log(snapshot.val(), "clique val");
+  const reff = ref(dbRef, `inQuiver/`); //retrieve posts
+  const ordered = query(reff); //orders by time
+  onChildAdded(reff, async (snapshot) => {
+    const vuid = snapshot.val().currentUser;
+    const user = getAuth().currentUser;
+    const getPhoto = () => {
+      for (var i = 0; i < users.length; i++) {
+        if (users[i].id == vuid) {
+          return users[i].info.photoURL;
+        }
+      }
+    };
+    const getName = () => {
+      for (var i = 0; i < users.length; i++) {
+        if (users[i].id == vuid) {
+          return users[i].info.displayName;
+        }
+      }
+    };
+    if (
+      snapshot.val().followedBy == user.uid &&
+      snapshot.val().currentUser !== user.uid
+    ) {
+      check.push({
+        id: snapshot.val().currentUser,
+        name: getName(),
+        photo: getPhoto(),
       });
     }
+
+    //  (snapshot.val(), "clique val");
   });
 
   return check;
 };
 
 const whichCliques = (id) => {
+  //anotheruserFollowing
   let data;
   let check = [];
   const dbRef = getDatabase();
@@ -102,7 +90,7 @@ const whichCliques = (id) => {
   onChildAdded(ordered, async (snapshot) => {
     if (snapshot.val().followedBy == id) {
       check.push({ id: snapshot.val() });
-      // console.log(snapshot.val(), "clique val");
+      //  (snapshot.val(), "clique val");
     }
   });
 
@@ -110,29 +98,52 @@ const whichCliques = (id) => {
 };
 
 const hasCliques = (id) => {
+  //another user followers
   let data;
   let check = [];
   const dbRef = getDatabase();
   const reff = ref(dbRef, `inQuiver/`); //retrieve posts
   const ordered = query(reff); //orders by time
   onChildAdded(ordered, async (snapshot) => {
-    if (snapshot.val().currentUser == id)
+    if (snapshot.val().currentUser == id && snapshot.val().followedBy !== id) {
       check.push({ id: snapshot.val().followedBy });
-    // console.log(snapshot.val(), "clique val");
+    }
+
+    //  (snapshot.val(), "clique val");
+  });
+
+  return check;
+};
+
+const getUsers = () => {
+  let data;
+  let check = [];
+  const dbRef = getDatabase();
+  const reff = ref(dbRef, `users`);
+
+  onChildAdded(reff, async (snapshot) => {
+    const val = snapshot.val();
+    const getFollowers = (uid) => {};
+
+    check.push({
+      id: snapshot.key,
+      info: val,
+      followers: hasCliques(snapshot.key).length,
+    });
   });
 
   return check;
 };
 const MeAsAUser = async () => {
   const repo = await getAuth().currrentUser.uid;
-  console.log(repo);
+  repo;
   let data = [];
   const dbRef = getDatabase();
   const reff = ref(dbRef, `users/${getAuth().currrentUser.uid}`); //retrieve posts
   const ordered = query(reff, orderByValue("time")); //orders by time
   onChildAdded(reff, async (snapshot) => {
     const val = snapshot.val();
-    console.log("data user", val);
+    "data user", val;
     data.push({
       displayName: val.displayName,
       photoURL: val.photoURL,
@@ -145,13 +156,34 @@ const getNotice = () => {
   let data = [];
   let check = [];
   const dbRef = getDatabase();
+  const users = getUsers();
   onAuthStateChanged(getAuth(app), (user) => {
     if (user) {
       const reff = ref(dbRef, `notifications/${user.uid}/info`);
       const ordered = query(reff, orderByChild("time"));
 
-      onChildAdded(reff, async (snapshot) => {
-        data.push({ id: snapshot.key, info: snapshot.val() });
+      onChildAdded(ordered, async (snapshot) => {
+        const getPhoto = () => {
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id == snapshot.val().from) {
+              return users[i].info.photoURL;
+            }
+          }
+        };
+        const getName = () => {
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id == snapshot.val().from) {
+              return users[i].info.displayName;
+            }
+          }
+        };
+        data.push({
+          id: snapshot.key,
+          info: snapshot.val().info,
+          name: getName(),
+          photo: getPhoto(),
+          postPhoto: snapshot.val().postPhoto,
+        });
       });
     }
   });
@@ -168,6 +200,7 @@ const getNotice = () => {
   return data;
 };
 const getCliques = () => {
+  // get followers
   getUsers();
   let data;
   let check = [];
@@ -192,15 +225,19 @@ const getCliques = () => {
           }
         }
       };
+      if (
+        snapshot.val().currentUser == getAuth().currentUser.uid &&
+        snapshot.val().followedBy !== getAuth().currentUser.uid
+      ) {
+        check.push({
+          id: snapshot.val().followedBy,
+          name: getName(),
 
-      check.push({
-        id: snapshot.val().followedBy,
-        name: getName(),
-
-        photo: getPhoto(),
-      });
+          photo: getPhoto(),
+        });
+      }
     }
-    // console.log(snapshot.val(), "clique val");
+    //  (snapshot.val(), "clique val");
   });
 
   return check;
@@ -208,22 +245,23 @@ const getCliques = () => {
 // getCliques();
 // MeAsAUser();
 const getAutoPosts = () => {
+  gethasCliques();
   let data = [];
   let check = [];
   let filtered = [];
   let Qid = [];
   const dbRef = getDatabase();
-  const cliques = getCliques();
+  const cliques = gethasCliques();
   const users = getUsers();
   cliques.map((q) => {
     Qid.push(q.id);
   });
-  console.log(Qid);
+  Qid;
   const reff = ref(dbRef, `posts/`); //retrieve posts
   const ordered = query(reff, orderByChild("time")); //orders by time
   onChildAdded(ordered, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
+    //  (val);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -245,7 +283,10 @@ const getAutoPosts = () => {
         }
       };
 
-      if (Qid.includes(snapshot.val().uid)) {
+      if (
+        Qid.includes(snapshot.val().uid) ||
+        snapshot.val().uid == getAuth().currentUser.uid
+      ) {
         check.unshift({
           id: snapshot.key,
           info: snapshot.val(),
@@ -254,20 +295,20 @@ const getAutoPosts = () => {
         });
       }
     } catch (e) {
-      console.log(e);
+      e;
     }
 
     // try {
     //   for (var i = 0; i < data.length; i++) {
-    //     console.log("from newdata", data[i]);
+    //      ("from newdata", data[i]);
     //   }
     // } catch (e) {
-    //   console.log(e, "from data error");
+    //    (e, "from data error");
     // }
   });
   // onChildChanged(ordered, async (snapshot) => {
   //   // const val = await snapshot.val();
-  //   // console.log(val);
+  //   //  (val);
   //   try {
   //     //need to check if the current user belongs to a clique
   //     // snapshot.forEach((key) => {
@@ -298,7 +339,7 @@ const getAutoPosts = () => {
   //       });
   //     }
   //   } catch (e) {
-  //     console.log(e);
+  //      (e);
   //   }
   // });
   // data = check.sort((x, y) => {
@@ -306,10 +347,10 @@ const getAutoPosts = () => {
   // });
   // try {
   //   for (var i = 0; i < check.length; i++) {
-  //     console.log("from newdata", check[i]);
+  //      ("from newdata", check[i]);
   //   }
   // } catch (e) {
-  //   console.log(e, "fromcheck error");
+  //    (e, "fromcheck error");
   // }
 
   return check;
@@ -326,7 +367,7 @@ const currentUserPost = () => {
   const ordered = query(reff, orderByValue("time")); //orders by time
   onChildAdded(reff, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
+    //  (val);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -373,17 +414,19 @@ const currentUserPost = () => {
         data.push({
           id: snapshot.key,
           info: snapshot.val(),
+          by: getAuth().currentUser.name,
+          photo: getAuth().currentUser.photoURL,
         });
       }
     } catch (e) {
-      console.log(e);
+      e;
     }
     // try {
     //   for (var i = 0; i < data.length; i++) {
-    //     console.log("from newData", data[i].id);
+    //      ("from newData", data[i].id);
     //   }
     // } catch (e) {
-    //   console.log(e, "from data error");
+    //    (e, "from data error");
     // }
   });
 
@@ -401,7 +444,7 @@ const searchedUserPost = (uid) => {
   const ordered = query(reff, orderByValue("time")); //orders by time
   onChildAdded(reff, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
+    //  (val);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -426,17 +469,19 @@ const searchedUserPost = (uid) => {
         data.push({
           id: snapshot.key,
           info: snapshot.val(),
+          by: getName(uid),
+          photo: getPhoto(uid),
         });
       }
     } catch (e) {
-      console.log(e);
+      e;
     }
     // try {
     //   for (var i = 0; i < data.length; i++) {
-    //     console.log("from newData", data[i].id);
+    //      ("from newData", data[i].id);
     //   }
     // } catch (e) {
-    //   console.log(e, "from data error");
+    //    (e, "from data error");
     // }
   });
 
@@ -449,49 +494,27 @@ const searchedUserData = (uid) => {
   const dbRef = getDatabase();
   const cliques = getCliques();
   const users = getUsers();
-  const reff = ref(dbRef, `posts/`); //retrieve posts
-  const ordered = query(reff, orderByValue("time")); //orders by time
-  onChildAdded(reff, async (snapshot) => {
-    // const val = await snapshot.val();
-    // console.log(val);
-    try {
-      //need to check if the current user belongs to a clique
-      // snapshot.forEach((key) => {
-      const vuid = await snapshot.val().uid;
-      const value = await snapshot.val();
 
-      const getPhoto = (uid) => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == uid) {
-            return users[i].info.photoURL;
-          }
-        }
-      };
-      const getName = (uid) => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == uid) {
-            return users[i].info.displayName;
-          }
-        }
-      };
-      if (vuid == uid) {
-        data.push({
-          id: snapshot.key,
-
-          name: getName(uid),
-          photo: getPhoto(uid),
-        });
+  const getPhoto = () => {
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].id == uid) {
+        return users[i].info.photoURL;
       }
-    } catch (e) {
-      console.log(e);
     }
-    // try {
-    //   for (var i = 0; i < data.length; i++) {
-    //     console.log("from newData", data[i].id);
-    //   }
-    // } catch (e) {
-    //   console.log(e, "from data error");
-    // }
+  };
+  const getName = () => {
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].id == uid) {
+        return users[i].info.displayName;
+      }
+    }
+  };
+
+  data.push({
+    id: uid,
+
+    name: getName(),
+    photo: getPhoto(),
   });
 
   return data;
@@ -500,9 +523,9 @@ const searchedUserData = (uid) => {
 const searchLikes = () => {
   let newData = [];
   // try {
-  //   console.log("from appenddata", key);
+  //    ("from appenddata", key);
   // } catch (e) {
-  //   console.log(e);
+  //    (e);
   // }
   const dbRef = getDatabase();
   const reff = ref(dbRef, `likes`); //retrieve posts
@@ -510,7 +533,7 @@ const searchLikes = () => {
   onChildAdded(ordered, async (snapshot) => {
     const val = await snapshot.val().from;
 
-    // console.log({
+    //  ({
     //   likeInfo: val,
     //   likeId: snapshot.key,
     // });
@@ -523,7 +546,7 @@ const searchLikes = () => {
 };
 
 const getComments = (postid) => {
-  console.log(postid, "in post comment");
+  postid, "in post comment";
   let data = [];
   let check = [];
   let filtered = [];
@@ -534,7 +557,7 @@ const getComments = (postid) => {
   const ordered = query(reff, orderByValue("time")); //orders by time
   onChildAdded(reff, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
+    //  (val);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -565,66 +588,66 @@ const getComments = (postid) => {
         uid: vuid,
       });
     } catch (e) {
-      console.log(e);
+      e;
     }
     //  try {
     //    for (var i = 0; i < data.length; i++) {
-    //      console.log("from newData", data[i]);
+    //       ("from newData", data[i]);
     //    }
     //  } catch (e) {
-    //    console.log(e, "from data error");
+    //     (e, "from data error");
     //  }
   });
 
-  onChildChanged(reff, async (snapshot) => {
-    // const val = await snapshot.val();
-    // console.log(val);
-    try {
-      //need to check if the current user belongs to a clique
-      // snapshot.forEach((key) => {
-      const vuid = await snapshot.val().by;
-      const value = await snapshot.val();
+  // onChildChanged(reff, async (snapshot) => {
+  //   // const val = await snapshot.val();
+  //   //  (val);
+  //   try {
+  //     //need to check if the current user belongs to a clique
+  //     // snapshot.forEach((key) => {
+  //     const vuid = await snapshot.val().by;
+  //     const value = await snapshot.val();
 
-      const getPhoto = () => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == vuid) {
-            return users[i].info.photoURL;
-          }
-        }
-      };
-      const getName = () => {
-        for (var i = 0; i < users.length; i++) {
-          if (users[i].id == vuid) {
-            return users[i].info.displayName;
-          }
-        }
-      };
+  //     const getPhoto = () => {
+  //       for (var i = 0; i < users.length; i++) {
+  //         if (users[i].id == vuid) {
+  //           return users[i].info.photoURL;
+  //         }
+  //       }
+  //     };
+  //     const getName = () => {
+  //       for (var i = 0; i < users.length; i++) {
+  //         if (users[i].id == vuid) {
+  //           return users[i].info.displayName;
+  //         }
+  //       }
+  //     };
 
-      data.unshift({
-        id: snapshot.key,
-        comment: snapshot.val().comment,
-        by: getName(vuid),
-        photo: getPhoto(),
-        time: snapshot.val().time,
-        uid: vuid,
-      });
-    } catch (e) {
-      console.log(e);
-    }
-    //  try {
-    //    for (var i = 0; i < data.length; i++) {
-    //      console.log("from newData", data[i]);
-    //    }
-    //  } catch (e) {
-    //    console.log(e, "from data error");
-    //  }
-  });
+  //     data.unshift({
+  //       id: snapshot.key,
+  //       comment: snapshot.val().comment,
+  //       by: getName(vuid),
+  //       photo: getPhoto(),
+  //       time: snapshot.val().time,
+  //       uid: vuid,
+  //     });
+  //   } catch (e) {
+  //      (e);
+  //   }
+  //   //  try {
+  //   //    for (var i = 0; i < data.length; i++) {
+  //   //       ("from newData", data[i]);
+  //   //    }
+  //   //  } catch (e) {
+  //   //     (e, "from data error");
+  //   //  }
+  // });
 
   return data;
 };
 
 const getLikes = (postid) => {
-  console.log(postid, "in post comment");
+  postid, "in post comment";
   let data = [];
   let count = Number;
   let filtered = [];
@@ -635,7 +658,7 @@ const getLikes = (postid) => {
   const ordered = query(reff, orderByValue("time")); //orders by time
   onChildAdded(reff, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
+    //  (val);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -644,14 +667,14 @@ const getLikes = (postid) => {
 
       data.push({ value: value });
     } catch (e) {
-      console.log(e);
+      e;
     }
     //  try {
     //    for (var i = 0; i < data.length; i++) {
-    //      console.log("from newData", data[i]);
+    //       ("from newData", data[i]);
     //    }
     //  } catch (e) {
-    //    console.log(e, "from data error");
+    //     (e, "from data error");
     //  }
   });
 
@@ -662,17 +685,17 @@ const getNoticeCount = () => {
   let count = 0;
 
   const dbRef = getDatabase();
-  const reff = ref(dbRef, `notifications/`);
-  // const ordered = query(reff, orderByChild("time"));
-  onChildAdded(reff, async (snapshot) => {
-    if (snapshot.key == getAuth().currentUser.uid) {
-      const val = snapshot.val().info;
+  onAuthStateChanged(getAuth(app), (user) => {
+    if (user) {
+      const reff = ref(dbRef, `notifications/${user.uid}/info`);
+      // const ordered = query(reff, orderByChild("time"));
+      onChildAdded(reff, async (snapshot) => {
+        const val = snapshot.val().isRead;
 
-      for (const key in val) {
-        if (val[key].isRead === false) {
-          count++;
+        if (val == false) {
+          ++count;
         }
-      }
+      });
     }
   });
   // onValue(ordered, (snapshot) => {
@@ -730,13 +753,13 @@ const getDirectMessage = (uid) => {
   const cliques = getCliques();
   const users = getUsers();
 
-  console.log(Qid);
+  Qid;
   const reff = ref(dbRef, `messages/${getAuth().currentUser.uid}/${uid}`); //retrieve posts
   const ordered = query(reff, orderByChild("time"), limitToLast(20)); //orders by time
   onChildAdded(ordered, async (snapshot) => {
     // const val = await snapshot.val();
-    // console.log(val);
-    // console.log("from getdmUsers", snapshot.key);
+    //  (val);
+    //  ("from getdmUsers", snapshot.key);
     try {
       //need to check if the current user belongs to a clique
       // snapshot.forEach((key) => {
@@ -769,20 +792,20 @@ const getDirectMessage = (uid) => {
         isRead: snapshot.val().isRead,
       });
     } catch (e) {
-      console.log(e);
+      e;
     }
 
     // try {
     //   for (var i = 0; i < check.length; i++) {
-    //     console.log("from newcheck", check[i]);
+    //      ("from newcheck", check[i]);
     //   }
     // } catch (e) {
-    //   console.log(e, "from data error");
+    //    (e, "from data error");
     // }
   });
   // onChildChanged(reff, async (snapshot) => {
   //   // const val = await snapshot.val();
-  //   // console.log(val);
+  //   //  (val);
   //   try {
   //     //need to check if the current user belongs to a clique
   //     // snapshot.forEach((key) => {
@@ -815,15 +838,15 @@ const getDirectMessage = (uid) => {
   //       }
   //     }
   //   } catch (e) {
-  //     console.log(e);
+  //      (e);
   //   }
 
   //   try {
   //     for (var i = 0; i < check.length; i++) {
-  //       console.log("from newcheck", check[i]);
+  //        ("from newcheck", check[i]);
   //     }
   //   } catch (e) {
-  //     console.log(e, "from data error");
+  //      (e, "from data error");
   //   }
   // });
   return data;
@@ -841,14 +864,14 @@ const getChatList = () => {
   const cliques = getCliques();
   const users = getUsers();
 
-  console.log(Qid);
+  Qid;
   onAuthStateChanged(getAuth(app), async (user) => {
     const reff = ref(dbRef, `messages/${user.uid}`); //retrieve posts
     const ordered = query(reff, orderByChild("time")); //orders by time
     onChildAdded(reff, async (snapshot) => {
       // const val = await snapshot.val();
-      // console.log(val);
-      // console.log("from getdmUsers", snapshot.key);
+      //  (val);
+      //  ("from getdmUsers", snapshot.key);
       try {
         //need to check if the current user belongs to a clique
         // snapshot.forEach((key) => {
@@ -887,7 +910,7 @@ const getChatList = () => {
         );
 
         check.forEach((ele) => {
-          console.log("message", ele[0].message);
+          "message", ele[0].message;
           lastMessage = ele[0].message;
         });
         check.forEach((ele) => {
@@ -905,13 +928,13 @@ const getChatList = () => {
 
         // try {
         //   for (var i = 0; i < filtered.length; i++) {
-        //     console.log("from newfiltered", filtered[i]);
+        //      ("from newfiltered", filtered[i]);
         //   }
         // } catch (e) {
-        //   console.log(e, "from data error");
+        //    (e, "from data error");
         // }
       } catch (e) {
-        console.log(e);
+        e;
       }
     });
   });
@@ -931,14 +954,14 @@ const getLastMessages = (uid) => {
   const cliques = getCliques();
   const users = getUsers();
 
-  console.log(Qid);
+  Qid;
   onAuthStateChanged(getAuth(app), async (user) => {
     const reff = ref(dbRef, `lastmessages/${user.uid}/${uid}`); //retrieve posts
     const ordered = query(reff, orderByChild("time")); //orders by time
     onChildAdded(reff, async (snapshot) => {
       // const val = await snapshot.val();
-      // console.log(val);
-      // console.log("from getdmUsers", snapshot.key);
+      //  (val);
+      //  ("from getdmUsers", snapshot.key);
       try {
         //need to check if the current user belongs to a clique
         // snapshot.forEach((key) => {
@@ -955,13 +978,13 @@ const getLastMessages = (uid) => {
 
         // try {
         //   for (var i = 0; i < filtered.length; i++) {
-        //     console.log("from newfiltered", filtered[i]);
+        //      ("from newfiltered", filtered[i]);
         //   }
         // } catch (e) {
-        //   console.log(e, "from data error");
+        //    (e, "from data error");
         // }
       } catch (e) {
-        console.log(e);
+        e;
       }
     });
   });
@@ -979,15 +1002,15 @@ const getTotalUnread = (uid) => {
   const cliques = getCliques();
   const users = getUsers();
 
-  console.log(Qid);
+  Qid;
   onAuthStateChanged(getAuth(app), (user) => {
     if (user) {
       const reff = ref(dbRef, `messages/${user.uid}`); //retrieve posts
       const ordered = query(reff, orderByChild("time")); //orders by time
       onChildAdded(reff, async (snapshot) => {
         // const val = await snapshot.val();
-        // console.log(val);
-        // console.log("from getdmUsers", snapshot.key);
+        //  (val);
+        //  ("from getdmUsers", snapshot.key);
         try {
           //need to check if the current user belongs to a clique
           // snapshot.forEach((key) => {
@@ -1001,13 +1024,13 @@ const getTotalUnread = (uid) => {
             }
           }
         } catch (e) {
-          console.log(e);
+          e;
         }
 
         // try {
-        //   console.log(check.length, "user count");
+        //    (check.length, "user count");
         // } catch (e) {
-        //   console.log(e, "from data error");
+        //    (e, "from data error");
         // }
       });
     }

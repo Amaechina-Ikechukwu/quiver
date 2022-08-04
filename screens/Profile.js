@@ -87,9 +87,9 @@ function ProfilePage({ route }) {
   const auth = getAuth().currentUser;
   useEffect(() => {
     // let newPost = [];
-    // for (var i = 0; i < userData.length; i++) {
-    //   console.log(userData[i]);
-    // }
+    for (var i = 0; i < userData.length; i++) {
+      userData[i];
+    }
 
     setPost(
       userData.sort((x, y) => {
@@ -98,7 +98,7 @@ function ProfilePage({ route }) {
     );
     return () => {};
   }, [user, auth, users]);
-
+  "inHasQuiver", inHasQuiver;
   const navigation = useNavigation();
 
   try {
@@ -127,38 +127,39 @@ function ProfilePage({ route }) {
                       <CText text={auth.displayName} />
                       <HStack
                         alignItems="center"
+                        space={3}
                         justifyContent={"space-evenly"}
                       >
                         <VStack alignItems="center">
-                          <CText
+                          {/* <CText
                             text={"has"}
                             size="sm"
                             style={{ opacity: 0.4 }}
-                          />
+                          /> */}
                           <CText
                             text={inQuiver.length || 0}
                             size="lg"
                             style={{ opacity: 0.9, fontWeight: "bold" }}
                           />
                           <CText
-                            text={"cliques"}
+                            text={"followers"}
                             size="sm"
                             style={{ opacity: 0.4 }}
                           />
                         </VStack>
                         <VStack alignItems="center">
-                          <CText
+                          {/* <CText
                             text={"in"}
                             size="sm"
                             style={{ opacity: 0.4 }}
-                          />
+                          /> */}
                           <CText
                             text={inHasQuiver.length || 0}
                             size="lg"
                             style={{ opacity: 0.9, fontWeight: "bold" }}
                           />
                           <CText
-                            text={"quivers"}
+                            text={"following"}
                             size="sm"
                             style={{ opacity: 0.4 }}
                           />
@@ -188,7 +189,7 @@ function ProfilePage({ route }) {
               />
             </Box>
           </Box> */}
-          <Box bg="brand.400" h="auto" p={2}>
+          <Box bg="brand.400" p={2}>
             <CText style={{ opacity: 0.4 }} text={"Post"} size="sm" />
             <Box w="full" alignItems={"center"}>
               <FlatList
@@ -200,8 +201,17 @@ function ProfilePage({ route }) {
                 // onRefresh={onRefresh}
                 // refreshing={isFetching}
                 keyExtractor={(item) => item.id}
-                ListEmptyComponent={post == "" ? null : <Loading />}
-                // onTouchStart={() => console.log("tapped", item)}
+                ListEmptyComponent={
+                  post == undefined ? null : (
+                    <Box flex={1} alignItems="center">
+                      <CText
+                        text={"No Posts"}
+                        size="xl"
+                        style={{ opacity: 0.3 }}
+                      />
+                    </Box>
+                  )
+                }
               />
             </Box>
           </Box>
@@ -213,7 +223,7 @@ function ProfilePage({ route }) {
       </Box>
     );
   } catch (e) {
-    console.log(e);
+    e;
     return (
       <Box>
         <CText text={"Error"} size="sm" style={{ opacity: 0.7 }} />

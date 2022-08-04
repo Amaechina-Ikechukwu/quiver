@@ -75,13 +75,13 @@ function SearchModal(props) {
             if (x.info.displayName.includes(searchWords)) {
               if (x.id !== getAuth().currentUser.uid) {
                 results.push(x);
-                console.log("from search", x);
+                "from search", x;
                 setFound(false);
               }
             }
             setsearchResult(results);
           } catch (e) {
-            console.log(e);
+            e;
           }
         });
         break;
@@ -102,8 +102,6 @@ function SearchModal(props) {
     setSearchedUserPost(item.id);
     navigation.navigate("UserProfile", {
       itemID: item.id,
-      itemS: item.info,
-      post: item.info.posts,
     });
   };
 

@@ -199,7 +199,7 @@ function Unboarding() {
       if (index >= 3) {
         setIndex(index - 2);
       } else setIndex(index + 1);
-      console.log(index);
+      index;
     }, 2000);
   };
 
@@ -210,10 +210,10 @@ function Unboarding() {
     //     "AlmendraSC-Regular": require("../assets/fonts/AlmendraSC-Regular.ttf"),
     //   })
     //     .then((res) => {
-    //       console.log("FONTS LOADED!");
+    //        ("FONTS LOADED!");
     //     })
     //     .catch((Err) => {
-    //       console.log(Err);
+    //        (Err);
     //     });
     // }
     MoveIn();

@@ -62,7 +62,7 @@ function HomePage({ navigation }) {
 
   //   const likePost = (postId, from) => {
   //     const db = getDatabase();
-  //     console.log("likePost", postId, from);
+  //      ("likePost", postId, from);
   //     set(ref(db, `posts/` + postId + "/likes/" + from), {}).then(() =>
   //       setPost()
   //     );
@@ -70,7 +70,7 @@ function HomePage({ navigation }) {
 
   //   const dellikePost = (postId, from) => {
   //     const db = getDatabase();
-  //     console.log("likePost", postId, from);
+  //      ("likePost", postId, from);
   //     remove(ref(db, `posts/` + postId + "/likes/" + from)).then(() => setPost());
   //   };
 
