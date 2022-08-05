@@ -75,7 +75,7 @@ function PostPage({ posting }) {
     setPosts();
   };
   const shouldSuggest = () => {
-    if (inHasQuiver == []) {
+    if (inHasQuiver == [] && inHasQuiver.length == 0) {
       setShowSuggested(true);
     } else {
       setShowSuggested(false);
