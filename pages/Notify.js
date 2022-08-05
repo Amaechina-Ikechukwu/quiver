@@ -42,26 +42,31 @@ function Notify({ navigation }) {
   const quiver = useStore((state) => state.quiver);
 
   useEffect(() => {
-    setNotification(notify);
+    setNotification(
+      notify.sort((x, y) => {
+        return x.time - y.time;
+      })
+    );
     navigation.addListener("focus", () => {
-      getNotify();
-      setNotification(notify);
+      setNotification(
+        notify.sort((x, y) => {
+          return x.time - y.time;
+        })
+      );
     });
     return () => {};
-  }, [notify]);
+  }, [notify, notification]);
 
   try {
     return (
       <Box flex={1} bg="brand.100" p={2}>
+        <Box safeAreaTop />
         <Box>
           <CText text={"Notifications"} size="xl" style={{ opacity: 0.7 }} />
         </Box>
         <Box>
           <FlatList
-            w="full"
-            h="full"
             data={notification}
-            extraData={notification}
             renderItem={({ item }) => (
               <Box>
                 <VStack

@@ -245,7 +245,6 @@ const getCliques = () => {
 // getCliques();
 // MeAsAUser();
 const getAutoPosts = () => {
-  gethasCliques();
   let data = [];
   let check = [];
   let filtered = [];

@@ -39,6 +39,7 @@ import {
   AntDesign,
   EvilIcons,
   FontAwesome,
+  Feather,
 } from "@expo/vector-icons";
 import colors from "../../colors";
 import CText from "../../constants/Text";
@@ -65,6 +66,7 @@ import SearchUserMessage from "./SearchUserMessage";
 import LastMessages from "./LastMessagesRender";
 import SingleUserCount from "./SingleUserCount";
 import UserConnection from "../../constants/UserConnection";
+import ChatSearchModal from "../../Modals/ChatSearchModal";
 
 function MessageList() {
   const chatList = useStore((state) => state.chatList);
@@ -74,7 +76,7 @@ function MessageList() {
       return x.time - y.time;
     })
   );
-
+  const [openSearch, setOpenSearch] = useState(false);
   const quiver = useStore((state) => state.quiver);
   const setLastMessages = useStore((state) => state.setLastMessages);
   useEffect(() => {
@@ -99,10 +101,28 @@ function MessageList() {
     setDirectMessage(item.id);
   };
 
+  const handleSearchModal = () => {
+    setOpenSearch(false);
+  };
+
   return (
-    <Box bg="brand.100" flex={1}>
-      <SearchUserMessage />
-      <Box mt={70}>
+    <Box bg="brand.100" flex={1} p={2}>
+      <Box safeAreaTop />
+
+      <IconPress
+        click={() => setOpenSearch(true)}
+        children={
+          <Box bg={"brand.400"} p={3} w="80%" rounded={"md"} mb={5}>
+            <CText
+              text={"Search Contacts"}
+              size="md"
+              style={{ opacity: 0.5 }}
+            />
+          </Box>
+        }
+      />
+
+      <Box>
         <FlatList
           // ListHeaderComponent={}
           keyExtractor={(item) =>
@@ -169,8 +189,23 @@ function MessageList() {
               </Box>
             );
           }}
+          ListEmptyComponent={
+            <Box
+              w="full"
+              h="full"
+              alignItems={"center"}
+              justifyContent="center"
+            >
+              <CText
+                text={"No recent chats yet"}
+                size="md"
+                style={{ opacity: 0.6 }}
+              />
+            </Box>
+          }
         />
       </Box>
+      <ChatSearchModal open={openSearch} onClose={() => handleSearchModal()} />
     </Box>
   );
 }

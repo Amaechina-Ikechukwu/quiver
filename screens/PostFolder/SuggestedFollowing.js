@@ -25,6 +25,7 @@ import {
   Image,
   SafeAreaView,
   KeyboardAvoidingView,
+  Modal,
 } from "react-native";
 import { ToastAndroid } from "react-native";
 import useStore from "../../store/user";
@@ -60,30 +61,55 @@ import { useNavigation } from "@react-navigation/native";
 import InputMe from "./InputMe";
 import Loading from "../Loading";
 
-function SuggestedFollowing() {
+function SuggestedFollowing({ open, onClose }) {
   const users = useStore((state) => state.users);
+  const setAlert = useStore((state) => state.setAlert);
   const quiver = useStore((state) => state.quiver);
+  const posts = useStore((state) => state.posts);
   const inHasQuiver = useStore((state) => state.inHasQuiver);
   const [followed, setFollowed] = useState([]);
   const setPosts = useStore((state) => state.setPosts);
   const setHasQuiver = useStore((state) => state.setHasQuiver);
-  const toasted = useStore((state) => state.toasted);
+  const [showSuggested, setShowSuggested] = useState(false);
+  const [count, setCount] = useState(inHasQuiver.length);
   const [suggestedUsers, setSuggestedUsers] = useState(
     users.sort((x, y) => {
       return y.followers - x.followers;
     })
   );
 
-  useEffect(() => {
-    "From suggested", inHasQuiver;
+  useLayoutEffect(() => {
+    setHasQuiver();
+  }, []);
 
+  useEffect(() => {
     let getFollowid = [];
     for (var key in inHasQuiver) {
       getFollowid.push(inHasQuiver[key].id);
     }
+    // setTimeout(() => {
+
+    // }, 5000);
+    setCount(inHasQuiver.length);
+    // setTimeout(() => {
+    if (count >= 1) {
+      setShowSuggested(false);
+    } else if (count == 0) {
+      setShowSuggested(true);
+    }
+    // }, 15000);
 
     setFollowed(getFollowid);
   }, [inHasQuiver]);
+
+  const closeSuggestion = () => {
+    if (inHasQuiver.length >= 1) {
+      setShowSuggested(false);
+      setPosts();
+    } else {
+      setAlert("Please Follow A User");
+    }
+  };
 
   const pushToFirestore = (itemID) => {
     followUser();
@@ -141,17 +167,18 @@ function SuggestedFollowing() {
 
   const navigation = useNavigation();
   return (
-    <Box flex={1} bg={"brand.100"} p={2}>
+    <Box flex={1} bg="brand.100" p={3}>
+      <UploadAlert />
       <Box safeAreaTop />
       <CText text={"Hey there,"} size="2xl" />
-      <HStack alignItems="center" space={5}>
-        <CText text={"Make a post ...or Follow top users"} size="lg" />
+      <HStack alignItems="center" justifyContent={"space-between"} space={5}>
+        <CText text={" Follow top users to enjoy"} size="lg" />
 
         <IconPress
           click={() => navigation.navigate("Postpage")}
           children={
             <Box bg="brand.400" p={2} rounded="sm">
-              <CText text={"Post"} />
+              <CText text={"Make A Post"} />
             </Box>
           }
         />

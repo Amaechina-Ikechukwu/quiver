@@ -51,6 +51,7 @@ function UploadAlert() {
           {/* <Collapse bg="green.300" w="full" isOpen={alert !== ""}> */}
           <Alert
             w="full"
+            alignItems="center"
             borderColor={"brand.700"}
             borderWidth={0.5}
             bg="brand.400"

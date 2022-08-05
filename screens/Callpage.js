@@ -185,7 +185,7 @@
 //   return (
 //     <HMSProvider value={hmsInstance}>
 //       <View style={{ flex: 1, width: "100%", backgroundColor: "#151515" }}>
-//         <StatusBar barStyle="default" />
+//
 //         <Box safeAreaTop />
 //         <PresenceTransition
 //           visible={true}

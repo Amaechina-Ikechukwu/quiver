@@ -197,8 +197,6 @@ function CommentPage({ route, navigation }) {
           <VStack flex={1} justifyContent={"space-between"}>
             <Box h="93%">
               <FlatList
-                StickyHeaderComponent={true}
-                stickyHeaderHiddenOnScroll={true}
                 ListHeaderComponent={
                   <HStack flexDirection="column">
                     <GestureRecognizer

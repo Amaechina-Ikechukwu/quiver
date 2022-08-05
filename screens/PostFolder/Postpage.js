@@ -64,23 +64,27 @@ function PostPage({ posting }) {
   const quiver = useStore((state) => state.quiver);
   const posts = useStore((state) => state.posts);
   const openComment = useStore((state) => state.openComment);
-  const users = useStore((state) => state.users);
+  const setHasQuiver = useStore((state) => state.setHasQuiver);
   const inHasQuiver = useStore((state) => state.inHasQuiver);
   const [isFetching, setIsFetching] = useState(false);
   const [showSuggested, setShowSuggested] = useState(false);
+
   const [post, setPost] = useState();
   const onRefresh = () => {
     // setIsFetching(true);
     setPosts();
   };
   const shouldSuggest = () => {
-    if (post == undefined) {
-      setShowSuggested(!showSuggested);
+    if (inHasQuiver == []) {
+      setShowSuggested(true);
+    } else {
+      setShowSuggested(false);
     }
   };
+  console.log(inHasQuiver.length);
   const closeSuggestion = () => {
     if (inHasQuiver.length >= 1) {
-      setShowSuggested(!showSuggested);
+      setShowSuggested(false);
       setPosts();
       onRefresh();
     } else {
@@ -91,61 +95,41 @@ function PostPage({ posting }) {
   useEffect(() => {
     try {
       let newPost = [];
+
       setPost(posts);
-    } catch (e) {
-      e;
-    }
-    posts;
-    shouldSuggest();
+    } catch (e) {}
     setTimeout(() => {
       shouldSuggest();
-    }, 8000);
+    }, 15000);
 
     return () => {};
-  }, [openComment, posts, post, inQuiver]);
+  }, [openComment, posts, post, inHasQuiver]);
 
   try {
     if (showSuggested == true) {
       return (
-        <Box flex={1} bg={"brand.200"}>
-          <Box safeAreaTop />
-          <UploadAlert />
-          <Header />
-          <VStack alignItems="center" justifyContent="center" flex={1}>
-            <SuggestedFollowing />
-            <Box w="full" p={3} bg="brand.200">
-              <Pressable onPress={() => closeSuggestion()}>
-                {({ isHovered, isFocused, isPressed }) => {
-                  return (
-                    <Box
-                      alignItems={"center"}
-                      bg="brand.400"
-                      p={2}
-                      rounded="sm"
-                      opacity={isFocused ? 0.5 : 1}
-                      style={{
-                        transform: [
-                          {
-                            scale: isPressed ? 0.96 : 1,
-                          },
-                        ],
-                      }}
-                    >
-                      <CText text={"Done"} />
-                    </Box>
-                  );
-                }}
-              </Pressable>
-            </Box>
-          </VStack>
+        <Box flex={1} bg="brand.100">
+          <SuggestedFollowing />
+          <IconPress
+            click={() => closeSuggestion()}
+            children={
+              <Box
+                bg="brand.400"
+                p={2}
+                alignItems="center"
+                w="full"
+                rounded="sm"
+              >
+                <CText text={"Done"} />
+              </Box>
+            }
+          />
         </Box>
       );
     }
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
-        <StatusBar barStyle="default" />
         <Box safeAreaTop />
-
         <UploadAlert />
         <Box mb={10}>
           <Header />
@@ -160,7 +144,6 @@ function PostPage({ posting }) {
             ListEmptyComponent={<Loading />}
           />
         </Box>
-
         <Box safeAreaBottom />
       </SafeAreaView>
     );

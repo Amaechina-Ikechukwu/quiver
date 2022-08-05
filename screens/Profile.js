@@ -86,11 +86,6 @@ function ProfilePage({ route }) {
   };
   const auth = getAuth().currentUser;
   useEffect(() => {
-    // let newPost = [];
-    for (var i = 0; i < userData.length; i++) {
-      userData[i];
-    }
-
     setPost(
       userData.sort((x, y) => {
         return y.info.time - x.info.time;

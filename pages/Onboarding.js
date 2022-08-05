@@ -224,7 +224,6 @@ function Unboarding() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="default" />
       <View style={styles.vText}>
         <Text style={styles.text}>Quiver</Text>
       </View>
