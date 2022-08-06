@@ -183,6 +183,7 @@ const getNotice = () => {
           name: getName(),
           photo: getPhoto(),
           postPhoto: snapshot.val().postPhoto,
+          time: snapshot.val().time,
         });
       });
     }

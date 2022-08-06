@@ -102,7 +102,7 @@ function Header() {
       inHasQuiver.length == 0 ? setdisplayOption(true) : closeModal();
     }, 15000);
     return () => {};
-  });
+  }, [inHasQuiver]);
 
   return (
     <Box>

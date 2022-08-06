@@ -245,7 +245,10 @@ function PhotoComments({ route, navigation }) {
                               </VStack>
                               <VStack>
                                 <CText
-                                  text={props.by}
+                                  text={
+                                    props.by ||
+                                    getAuth().currentUser.displayName
+                                  }
                                   size="sm"
                                   style={{ opacity: 0.8 }}
                                 />

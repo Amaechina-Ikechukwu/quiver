@@ -473,31 +473,26 @@ export default function App() {
     checkuser();
     isUsers();
     setUnreadMessages();
-    setPosts();
+
     onAuthStateChanged(getAuth(app), (user) => {
       if (!user) {
         setLog(false);
         setloading(true);
       } else {
-        "inQuiver", inQuiver;
+        setPosts();
         setloading(true);
         setLog(true);
         setQuiver();
         getNC();
         getNotify();
-        setHasQuiver();
+
         setTimeout(() => {
           getNC();
           getNotify();
           setNotificationCount(noticeCount);
           setUnreadMessagesCount(UnreadMessages.length);
           setUserData();
-
-          "notification",
-            NotificationCount,
-            "---",
-            "Unread",
-            UnreadMessages.length;
+          setHasQuiver();
         }, 5000);
       }
     });

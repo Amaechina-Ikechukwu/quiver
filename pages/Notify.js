@@ -44,13 +44,13 @@ function Notify({ navigation }) {
   useEffect(() => {
     setNotification(
       notify.sort((x, y) => {
-        return x.time - y.time;
+        return y.time - x.time;
       })
     );
     navigation.addListener("focus", () => {
       setNotification(
         notify.sort((x, y) => {
-          return x.time - y.time;
+          return y.time - x.time;
         })
       );
     });
