@@ -24,7 +24,11 @@ function Pressing(props) {
             }}
           >
             <Center>
-              <Text fontSize={props.tw || "sm"} color="brand.800">
+              <Text
+                style={props.textStyle}
+                fontSize={props.tw || "sm"}
+                color="brand.800"
+              >
                 {props.text}
               </Text>
             </Center>

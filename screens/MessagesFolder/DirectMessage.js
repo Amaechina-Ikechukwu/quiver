@@ -66,7 +66,7 @@ import {
 import { getAuth } from "firebase/auth";
 import IconAction from "../../constants/IconAction";
 import Loading from "../../screens/Loading";
-
+import Pressing from "../../constants/Pressing";
 import SearchUserMessage from "./SearchUserMessage";
 import MessageHeader from "./MessgaeHeader";
 import MessagesInput from "./MessagesInput";
@@ -235,8 +235,14 @@ function DirectMessage({ route }) {
             placeholder="Text"
             placeholderTextColor={"rgba(255,255,255,0.6)"}
           />
-
-          <IconPress
+          {messages == "" ? (
+            <Box alignItems="center" justifyContent={"center"} p={3}>
+              <CText text={"Send"} size="sm" />
+            </Box>
+          ) : (
+            <Pressing text={"Send"} />
+          )}
+          {/* <IconPress
             click={
               messages == ""
                 ? null
@@ -253,7 +259,7 @@ function DirectMessage({ route }) {
                 color={messages !== "" ? colors.brand : colors.disbrand}
               />
             }
-          />
+          /> */}
         </HStack>
       </Box>
     </Box>

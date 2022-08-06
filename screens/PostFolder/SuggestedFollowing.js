@@ -106,6 +106,7 @@ function SuggestedFollowing({ open, onClose }) {
     if (inHasQuiver.length >= 1) {
       setShowSuggested(false);
       setPosts();
+      onClose();
     } else {
       setAlert("Please Follow A User");
     }
@@ -167,70 +168,88 @@ function SuggestedFollowing({ open, onClose }) {
 
   const navigation = useNavigation();
   return (
-    <Box flex={1} bg="brand.100" p={3}>
-      <UploadAlert />
-      <Box safeAreaTop />
-      <CText text={"Hey there,"} size="2xl" />
-      <HStack alignItems="center" justifyContent={"space-between"} space={5}>
-        <CText text={" Follow top users to enjoy"} size="lg" />
+    <Modal
+      animationType={"fade"}
+      transparent={true}
+      visible={open}
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Box flex={1} bg="brand.100" p={3}>
+        <UploadAlert />
+        <Box safeAreaTop />
+        <CText text={"Hey there,"} size="2xl" />
+        <HStack alignItems="center" justifyContent={"space-between"} space={5}>
+          <CText text={" Follow top users to enjoy"} size="lg" />
 
+          <IconPress
+            click={() => navigation.navigate("Postpage")}
+            children={
+              <Box bg="brand.400" p={2} rounded="sm">
+                <CText text={"Make A Post"} />
+              </Box>
+            }
+          />
+        </HStack>
+
+        <FlatList
+          data={suggestedUsers}
+          renderItem={({ item }) => {
+            if (item.id !== getAuth().currentUser.uid) {
+              return (
+                <Box w="100%" p={5}>
+                  <HStack
+                    w="100%"
+                    px={3}
+                    alignItems="center"
+                    justifyContent={"space-between"}
+                  >
+                    <Box>
+                      <Avatar
+                        size="48px"
+                        source={{
+                          uri: item.info.photoURL || quiver,
+                        }}
+                      />
+                    </Box>
+                    <Box>
+                      <CText text={item.info.displayName} size="md" />
+                    </Box>
+                    <Box>
+                      {followed.includes(item.id) ? (
+                        <Box bg="brand.400" p={2} rounded="sm">
+                          <CText text={"Following"} />
+                        </Box>
+                      ) : (
+                        <IconPress
+                          click={() => followUser(item.id)}
+                          children={
+                            <Box bg="brand.700" p={2} rounded="sm">
+                              <CText text={"Follow"} />
+                            </Box>
+                          }
+                        />
+                      )}
+                    </Box>
+                  </HStack>
+                </Box>
+              );
+            }
+          }}
+          ListEmptyComponent={<Loading />}
+        />
         <IconPress
-          click={() => navigation.navigate("Postpage")}
+          click={() => closeSuggestion()}
           children={
-            <Box bg="brand.400" p={2} rounded="sm">
-              <CText text={"Make A Post"} />
+            <Box bg="brand.400" p={2} alignItems="center" w="full" rounded="sm">
+              <CText text={"Done"} />
             </Box>
           }
         />
-      </HStack>
-
-      <FlatList
-        data={suggestedUsers}
-        renderItem={({ item }) => {
-          if (item.id !== getAuth().currentUser.uid) {
-            return (
-              <Box w="100%" p={5}>
-                <HStack
-                  w="100%"
-                  px={3}
-                  alignItems="center"
-                  justifyContent={"space-between"}
-                >
-                  <Box>
-                    <Avatar
-                      size="48px"
-                      source={{
-                        uri: item.info.photoURL || quiver,
-                      }}
-                    />
-                  </Box>
-                  <Box>
-                    <CText text={item.info.displayName} size="md" />
-                  </Box>
-                  <Box>
-                    {followed.includes(item.id) ? (
-                      <Box bg="brand.400" p={2} rounded="sm">
-                        <CText text={"Following"} />
-                      </Box>
-                    ) : (
-                      <IconPress
-                        click={() => followUser(item.id)}
-                        children={
-                          <Box bg="brand.700" p={2} rounded="sm">
-                            <CText text={"Follow"} />
-                          </Box>
-                        }
-                      />
-                    )}
-                  </Box>
-                </HStack>
-              </Box>
-            );
-          }
-        }}
-        ListEmptyComponent={<Loading />}
-      />
-    </Box>
+      </Box>
+    </Modal>
   );
 }
 

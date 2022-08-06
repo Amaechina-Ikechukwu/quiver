@@ -75,13 +75,15 @@ function PostPage({ posting }) {
     setPosts();
   };
   const shouldSuggest = () => {
-    if (inHasQuiver == [] && inHasQuiver.length == 0) {
-      setShowSuggested(true);
-    } else {
-      setShowSuggested(false);
-    }
+    setTimeout(() => {
+      if (inHasQuiver.length !== 0) {
+        setShowSuggested(false);
+      } else {
+        setShowSuggested(true);
+      }
+    }, 5000);
   };
-  console.log(inHasQuiver.length);
+
   const closeSuggestion = () => {
     if (inHasQuiver.length >= 1) {
       setShowSuggested(false);
@@ -106,27 +108,6 @@ function PostPage({ posting }) {
   }, [openComment, posts, post, inHasQuiver]);
 
   try {
-    if (showSuggested == true) {
-      return (
-        <Box flex={1} bg="brand.100">
-          <SuggestedFollowing />
-          <IconPress
-            click={() => closeSuggestion()}
-            children={
-              <Box
-                bg="brand.400"
-                p={2}
-                alignItems="center"
-                w="full"
-                rounded="sm"
-              >
-                <CText text={"Done"} />
-              </Box>
-            }
-          />
-        </Box>
-      );
-    }
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <Box safeAreaTop />

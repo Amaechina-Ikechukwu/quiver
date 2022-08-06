@@ -1,5 +1,4 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, StatusBar } from "react-native";
 import Unboarding from "./pages/Onboarding";
 import React, {
   useState,
@@ -486,13 +485,13 @@ export default function App() {
         setQuiver();
         getNC();
         getNotify();
+        setHasQuiver();
         setTimeout(() => {
           getNC();
           getNotify();
           setNotificationCount(noticeCount);
           setUnreadMessagesCount(UnreadMessages.length);
           setUserData();
-          setHasQuiver();
 
           "notification",
             NotificationCount,
@@ -523,6 +522,11 @@ export default function App() {
 
   return (
     <NativeBaseProvider theme={theme}>
+      <StatusBar
+        backgroundColor={colors.primary}
+        barStyle="light-content"
+        animated={true}
+      />
       <Box flex={1} backgroundColor="brand.100">
         <NavigationContainer>
           <Tab.Navigator

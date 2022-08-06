@@ -31,14 +31,17 @@ import { getUsers } from "../store/functions/getusers";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { Link } from "@react-navigation/native";
 import UploadAlert from "../constants/UploadAlert";
-
+import Pressing from "../constants/Pressing";
 import CText from "../constants/Text";
 import moment from "moment";
 import { app } from "../Firebase";
+import SuggestedFollowing from "../screens/PostFolder/SuggestedFollowing";
 function Header() {
   const posts = useStore((state) => state.posts);
   const [showModal, setShowModal] = useState(false);
   const [getModal, setGetModal] = useState(false);
+  const [showSuggested, setShowSuggested] = useState(false);
+  const [displayOption, setdisplayOption] = useState(false);
   const quiver = useStore((state) => state.quiver);
   const [User, setUserName] = useState();
   const [Photo, setUserPhoto] = useState();
@@ -57,9 +60,29 @@ function Header() {
   const setPosts = useStore((state) => state.setPosts);
   const setCliques = useStore((state) => state.setCliques);
   const getNC = useStore((state) => state.getNC);
+  const inHasQuiver = useStore((state) => state.inHasQuiver);
 
+  const shouldSuggest = () => {
+    setTimeout(() => {
+      if (inHasQuiver.length !== 0) {
+        setShowSuggested(false);
+      } else {
+        setShowSuggested(true);
+      }
+    }, 5000);
+  };
+
+  const closeSuggestion = () => {
+    if (inHasQuiver.length >= 1) {
+      setShowSuggested(false);
+      setPosts();
+    } else {
+      setAlert("Please Follow A User");
+    }
+  };
   const closeModal = () => {
-    setGetModal(!getModal);
+    setdisplayOption(false);
+    setPosts();
   };
   const closeShowModal = () => {
     setShowModal(!showModal);
@@ -74,6 +97,10 @@ function Header() {
       setUserName(user.displayName);
       setUserPhoto(user.photoURL);
     });
+
+    setTimeout(() => {
+      inHasQuiver.length == 0 ? setdisplayOption(true) : closeModal();
+    }, 15000);
     return () => {};
   });
 
@@ -82,7 +109,7 @@ function Header() {
       {getAuth().currentUser !== undefined || getAuth().currentUser !== null ? (
         <HStack
           px="3"
-          py="1"
+          py="2"
           justifyContent="space-between"
           alignItems="center"
           w="full"
@@ -118,18 +145,19 @@ function Header() {
               {User !== undefined ? User.split(" ")[0] : null}
             </Text>
           </HStack>
-
+          {displayOption == true ? (
+            <Pressing
+              click={() => setShowSuggested(true)}
+              text={"Follow Top Users"}
+              bg="brand.400"
+              textStyle={{ opacity: 0.6 }}
+            />
+          ) : null}
           <Popover
             placement="top right"
             trigger={(triggerProps) => {
               return (
-                <Pressable
-                  w="100%"
-                  p={2}
-                  bg="brand.400"
-                  rounded="md"
-                  {...triggerProps}
-                >
+                <Pressable w="100%" p={2} rounded="md" {...triggerProps}>
                   <AntDesign
                     name="ellipsis1"
                     size={24}
@@ -179,6 +207,10 @@ function Header() {
         </HStack>
       ) : null}
       <SearchModal open={showModal} close={() => closeShowModal()} />
+      <SuggestedFollowing
+        open={showSuggested}
+        onClose={() => closeSuggestion()}
+      />
     </Box>
   );
 }
